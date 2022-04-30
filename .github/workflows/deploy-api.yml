@@ -9,6 +9,9 @@ on:
 env:
   IMAGE_NAME: asia-southeast1-docker.pkg.dev/cloud-final-346107/docker/cloud-final-services/api
 
+permissions:
+  id-token: 'write'
+
 jobs:
   build:
     name: Setup, Build, and Publish Docker image
