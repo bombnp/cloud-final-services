@@ -61,7 +61,7 @@ jobs:
       - name: Trigger service deployment in GitOps repo
         run: |-
           curl \
-          -u bombnp:${{ secrets.GH_PAT }}
+          -u bombnp:${{ secrets.GH_PAT }} \
           -X POST \
           -H "Accept: application/vnd.github.v3+json" \
           -d '{"event_type":"deploy-service","client_payload":{"namespace":"master","service":"api"}}' \
