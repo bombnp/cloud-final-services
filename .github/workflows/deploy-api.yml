@@ -42,7 +42,7 @@ jobs:
       # Configure Docker to use the gcloud command-line tool as a credential
       # helper for authentication
       - run: |-
-          gcloud auth configure-docker
+          gcloud auth configure-docker asia-southeast1-docker.pkg.dev
           
       - name: Extract branch
         run: |
