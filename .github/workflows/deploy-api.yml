@@ -47,8 +47,7 @@ jobs:
       - name: Trigger service deployment in GitOps repo
         run: |-
           curl \
-          -u bombnp:${{ secrets.GH_PAT }}
           -X POST \
           -H "Accept: application/vnd.github.v3+json" \
-          https://api.github.com/repos/bombnp/cloud-final-gitops/dispatches \
-          -d '{"event_type":"deploy-service","client_payload":{"namespace":"master","service":"api"}}'
+          -d '{"event_type":"deploy-service","client_payload":{"namespace":"master","service":"api"}}' \
+          https://api.github.com/repos/bombnp/cloud-final-gitops/dispatches
