@@ -11,3 +11,22 @@ but separate `main.go` files and `Dockerfile`s.
 ```shell
    $ go run main.go
    ```
+
+## Migration
+Don't forget to copy `./migrations/migrate.sh` -> `./migrations/migrate.local.sh` and edit the 
+credentials to match your database.
+
+### Create migration
+```shell
+$  migrate create -ext sql -dir migrations -seq <migration_name>
+```
+### Apply migration (up)
+Linux:
+```shell
+$  ./migrations/migrate.local.sh
+```
+
+Windows:
+```shell
+$  ./migrations/migrate.local.ps1
+```
