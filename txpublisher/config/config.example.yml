@@ -1,0 +1,7 @@
+postgres:
+  host:
+  port:
+  user:
+  password:
+  dbname:
+  sslmode: disable
