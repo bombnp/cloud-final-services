@@ -5,6 +5,11 @@ on:
   push:
     branches:
       - master
+    paths:
+      - 'go.mod'
+      - 'go.sum'
+      - 'lib/**'
+      - 'api/**'
 
 env:
   IMAGE_NAME: asia-southeast1-docker.pkg.dev/cloud-final-346107/cloud-final-services/api 
