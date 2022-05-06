@@ -1,0 +1,31 @@
+version: '3.9'
+
+services:
+  redis:
+    image: bitnami/redis:6.2
+    container_name: cloud-final-redis
+    restart: unless-stopped
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    volumes:
+      - cloud-final-redis:/bitnami/redis/data
+    ports:
+      - '5432:5432'
+  postgres:
+    image: postgres:14.2
+    container_name: cloud-final-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=cloud-final
+    volumes:
+      - cloud-final-postgres:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+
+volumes:
+  cloud-final-postgres:
+    name: cloud-final-postgres
+  cloud-final-redis:
+    name: cloud-final-redis
