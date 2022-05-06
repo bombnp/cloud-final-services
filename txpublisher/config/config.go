@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/bombnp/cloud-final-services/lib/postgres"
+	"github.com/bombnp/cloud-final-services/lib/redis"
 	"github.com/spf13/viper"
 )
 
@@ -14,6 +15,13 @@ var config *Config
 
 type Config struct {
 	Postgres *postgres.Config `mapstructure:"postgres"`
+	Redis    *redis.Config    `mapstructure:"redis"`
+	Chain    Chain            `mapstructure:"chain"`
+}
+
+type Chain struct {
+	NodeURL           string `mapstructure:"node_url"`
+	MaxBlocksPerQuery uint64 `mapstructure:"max_blocks_per_query"`
 }
 
 func InitConfig() *Config {

@@ -5,3 +5,10 @@ postgres:
   password:
   dbname:
   sslmode: disable
+redis:
+  address:
+  password:
+  database:
+chain:
+  node_url:
+  max_blocks_per_query:
