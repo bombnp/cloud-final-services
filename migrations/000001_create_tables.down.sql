@@ -1,0 +1,7 @@
+BEGIN;
+
+DROP TABLE IF EXISTS pair_subscriptions;
+DROP TABLE IF EXISTS pairs;
+DROP TABLE IF EXISTS tokens;
+
+COMMIT;
