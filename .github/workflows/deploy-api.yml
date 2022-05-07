@@ -10,7 +10,7 @@ on:
       - 'go.sum'
       - 'lib/**'
       - 'api/**'
-      - '.github/workflow/deploy-api.yml'
+      - '.github/workflows/deploy-api.yml'
 
 env:
   IMAGE_NAME: us-west1-docker.pkg.dev/cloud-final-346107/cloud-final-services/api
