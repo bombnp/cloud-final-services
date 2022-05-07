@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/bombnp/cloud-final-services/api/config"
+	"github.com/bombnp/cloud-final-services/api/repository"
 	"github.com/bombnp/cloud-final-services/api/services"
 	"github.com/gin-gonic/gin"
 )
@@ -18,7 +19,7 @@ func main() {
 		return
 	})
 
-	service := services.NewHandler(services.NewService())
+	service := services.NewHandler(services.NewService(repository.New()))
 	api_handler := router.Group("/api")
 	subscribe_handler := api_handler.Group("/subscribe")
 	{
