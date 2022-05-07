@@ -12,7 +12,7 @@ func New(pg *gorm.DB) *Databaser {
 	}
 }
 
-func (db *Databaser) InsertNewAlert(id, pool string) error {
-	query := `INSERT INTO pair_subscriptions (server_id,pool_address,type) VALUE('?','?','alert')`
-	return db.Postgres.Exec(query, id, pool).Error
+func (db *Databaser) InsertNewSubscribe(id, pool, t string) error {
+	query := `INSERT INTO pair_subscriptions (server_id,pool_address,type) VALUE('?','?','?')`
+	return db.Postgres.Exec(query, id, pool, t).Error
 }

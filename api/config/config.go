@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/bombnp/cloud-final-services/lib/postgres"
 	"github.com/spf13/viper"
 )
 
@@ -12,11 +13,16 @@ var configOnce sync.Once
 var config *Config
 
 type Config struct {
-	Server ServerConfig `mapstructure:"server"`
+	Server   ServerConfig   `mapstructure:"server"`
+	Database DatabaseConfig `mapstructure:"database"`
 }
 
 type ServerConfig struct {
 	Port int `mapstructure:"port"`
+}
+
+type DatabaseConfig struct {
+	Postgres postgres.Config `mapstructure:"postgres"`
 }
 
 func InitConfig() *Config {

@@ -5,7 +5,7 @@ type Service struct {
 }
 
 type Databaser interface {
-	InsertNewAlert(id, pool string) error
+	InsertNewSubscribe(id, pool, t string) error
 }
 
 func NewService(db Databaser) *Service {
@@ -15,5 +15,5 @@ func NewService(db Databaser) *Service {
 }
 
 func (s *Service) AlertSubscribe(id string, pool string) error {
-	return s.Database.InsertNewAlert(id, pool)
+	return s.Database.InsertNewSubscribe(id, pool, "alert")
 }
