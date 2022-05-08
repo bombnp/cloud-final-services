@@ -1,3 +1,7 @@
 **/config/config.yml
 migrations/migrate.local.*
 .idea
+
+discord/bin
+discord/lib
+discord/pyvenv.cfg
