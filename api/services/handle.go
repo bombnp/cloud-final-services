@@ -23,4 +23,30 @@ func (h *Handler) AlertSubscribeHandler(c *gin.Context) {
 		return
 	}
 
+	if err := h.s.AlertSubscribe(req.ServerId, req.PoolAddress); err != nil {
+		c.JSON(400, &Logger{
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, &Logger{
+		Message: "OK",
+	})
+
+}
+
+func (h *Handler) GetAllPairHandler(c *gin.Context) {
+
+	resp, err := h.s.GetAllPair()
+
+	if err != nil {
+		c.JSON(400, &Logger{
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, resp)
+
 }

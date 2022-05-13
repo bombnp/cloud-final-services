@@ -30,7 +30,7 @@ func main() {
 	service := services.NewHandler(services.NewService(repository.New(pg)))
 	api_handler := router.Group("/api")
 	{
-		api_handler.GET("/pair")
+		api_handler.GET("/pair", service.GetAllPairHandler)
 
 		subscribe_handler := api_handler.Group("/subscribe")
 		{

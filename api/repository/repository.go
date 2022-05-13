@@ -19,17 +19,6 @@ func (db *Databaser) InsertNewSubscribe(id, pool, t string) error {
 
 }
 
-func (db *Databaser) QueryAllToken() ([]Token, error) {
-
-	var token_list []Token
-
-	query := `SELECT * FROM tokens`
-	err := db.Postgres.Raw(query).Scan(&token_list).Error
-
-	return token_list, err
-
-}
-
 func (db *Databaser) QueryToken(address string) (Token, error) {
 
 	var token Token
@@ -39,4 +28,17 @@ func (db *Databaser) QueryToken(address string) (Token, error) {
 
 	return token, err
 
+}
+
+func (db *Databaser) QueryAllPair() ([]Pair, error) {
+	var pair_list []Pair
+
+	query := `SELECT * FROM pairs`
+	err := db.Postgres.Raw(query).Scan(pair_list).Error
+
+	if err != nil {
+		return nil, err
+	} else {
+		return pair_list, nil
+	}
 }
