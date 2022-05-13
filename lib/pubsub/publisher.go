@@ -16,7 +16,7 @@ type PublisherConfig struct {
 	EnableMessageOrdering     bool   `mapstructure:"enable_message_ordering"`
 }
 
-type publisher struct {
+type Publisher struct {
 	config *PublisherConfig
 	client *googlepubsub.Client
 
@@ -26,22 +26,22 @@ type publisher struct {
 	closed bool
 }
 
-func NewPublisher(config *PublisherConfig) (*publisher, error) {
+func NewPublisher(config *PublisherConfig) (*Publisher, error) {
 	ctx := context.Background()
 	client, err := googlepubsub.NewClient(ctx, config.ProjectID)
 	if err != nil {
 		return nil, errors.Wrap(err, "can't create google pubsub client")
 	}
-	return &publisher{
+	return &Publisher{
 		config: config,
 		client: client,
 		topics: map[string]*googlepubsub.Topic{},
 	}, nil
 }
 
-func (p *publisher) Publish(ctx context.Context, topic string, orderingKey string, messages ...*message.Message) error {
+func (p *Publisher) Publish(ctx context.Context, topic string, orderingKey string, messages ...*message.Message) error {
 	if p.closed {
-		return errors.New("publisher is closed")
+		return errors.New("Publisher is closed")
 	}
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -71,7 +71,7 @@ func (p *publisher) Publish(ctx context.Context, topic string, orderingKey strin
 	return nil
 }
 
-func (p *publisher) Close() error {
+func (p *Publisher) Close() error {
 	if p.closed {
 		return nil
 	}
@@ -85,7 +85,7 @@ func (p *publisher) Close() error {
 
 	return p.client.Close()
 }
-func (p *publisher) getTopic(ctx context.Context, topic string) (t *googlepubsub.Topic, err error) {
+func (p *Publisher) getTopic(ctx context.Context, topic string) (t *googlepubsub.Topic, err error) {
 	p.topicsLock.RLock()
 	t, ok := p.topics[topic]
 	p.topicsLock.RUnlock()
