@@ -1,5 +1,5 @@
 package pubsub
 
-const SyncEvents = "sync-events"
-const PriceAlerts = "price-alerts"
-const PriceSummary = "price-summary"
+const SyncEventsTopic = "sync-events"
+const PriceAlertsTopic = "price-alerts"
+const PriceSummaryTopic = "price-summary"

@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/bombnp/cloud-final-services/lib/postgres"
+	"github.com/bombnp/cloud-final-services/lib/pubsub"
 	"github.com/bombnp/cloud-final-services/lib/redis"
 	"github.com/spf13/viper"
 )
@@ -14,9 +15,10 @@ var configOnce sync.Once
 var config *Config
 
 type Config struct {
-	Postgres *postgres.Config `mapstructure:"postgres"`
-	Redis    *redis.Config    `mapstructure:"redis"`
-	Chain    Chain            `mapstructure:"chain"`
+	Postgres  *postgres.Config        `mapstructure:"postgres"`
+	Redis     *redis.Config           `mapstructure:"redis"`
+	Publisher *pubsub.PublisherConfig `mapstructure:"publisher"`
+	Chain     Chain                   `mapstructure:"chain"`
 }
 
 type Chain struct {

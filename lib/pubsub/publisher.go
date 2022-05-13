@@ -2,6 +2,7 @@ package pubsub
 
 import (
 	"context"
+	"log"
 	"sync"
 	"time"
 
@@ -14,6 +15,7 @@ type PublisherConfig struct {
 	ProjectID                 string `mapstructure:"project_id"`
 	DoNotCreateTopicIfMissing bool   `mapstructure:"do_not_create_topic_if_missing"`
 	EnableMessageOrdering     bool   `mapstructure:"enable_message_ordering"`
+	DelayThreshold            *int   `mapstructure:"delay_threshold"` // seconds to wait before publishing the batch
 }
 
 type Publisher struct {
@@ -51,7 +53,6 @@ func (p *Publisher) Publish(ctx context.Context, topic string, orderingKey strin
 		return errors.Wrapf(err, "can't get topic %s", topic)
 	}
 
-	// intentionally waiting for each message to finish before publishing a new one
 	for _, msg := range messages {
 		pubsubMsg, err := Marshal(msg, orderingKey)
 		if err != nil {
@@ -59,12 +60,15 @@ func (p *Publisher) Publish(ctx context.Context, topic string, orderingKey strin
 		}
 
 		result := t.Publish(ctx, pubsubMsg)
-		<-result.Ready()
 
-		_, err = result.Get(ctx)
-		if err != nil {
-			t.ResumePublish(orderingKey)
-			return errors.Wrapf(err, "publishing message %s failed", msg.UUID)
+		// intentionally waiting for each message to finish before publishing a new one if message ordering is enabled
+		if p.config.EnableMessageOrdering {
+			<-result.Ready()
+			_, err = result.Get(ctx)
+			if err != nil {
+				t.ResumePublish(orderingKey)
+				return errors.Wrapf(err, "publishing message %s failed", msg.UUID)
+			}
 		}
 	}
 
@@ -105,6 +109,11 @@ func (p *Publisher) getTopic(ctx context.Context, topic string) (t *googlepubsub
 
 	t = p.client.Topic(topic)
 	t.EnableMessageOrdering = p.config.EnableMessageOrdering
+	if p.config.DelayThreshold != nil {
+		delayThreshold := time.Duration(*p.config.DelayThreshold) * time.Second
+		t.PublishSettings.DelayThreshold = delayThreshold
+		log.Printf("Topic %s delay threshold set to %s", topic, delayThreshold)
+	}
 
 	exists, err := t.Exists(ctx)
 	if err != nil {

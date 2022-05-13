@@ -1,6 +1,6 @@
 BEGIN;
 
 ALTER TABLE "pairs" ADD COLUMN "dex" TEXT;
-ALTER TABLE "pairs" ADD COLUMN "dex" TEXT;
+ALTER TABLE "tokens" ADD COLUMN "name" TEXT;
 
 COMMIT;
