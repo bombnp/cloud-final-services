@@ -1,0 +1,18 @@
+postgres:
+  host:
+  port:
+  user:
+  password:
+  dbname:
+  sslmode: disable
+redis:
+  address:
+  password:
+  database:
+chain:
+  node_url:
+  max_blocks_per_query: 100
+publisher:
+  project_id: 
+  do_not_create_topic_if_missing: true
+  enable_message_ordering: false

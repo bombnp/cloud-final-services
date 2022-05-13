@@ -1,3 +1,5 @@
+BEGIN;
+
 CREATE TABLE IF NOT EXISTS "tokens"
 (
     "address" TEXT NOT NULL,
@@ -26,3 +28,5 @@ CREATE TABLE IF NOT EXISTS "pair_subscriptions"
     PRIMARY KEY ("pool_address"),
     CONSTRAINT pool_address_FK FOREIGN KEY ("pool_address") REFERENCES pairs ("pool_address") ON DELETE CASCADE
 );
+
+COMMIT;
