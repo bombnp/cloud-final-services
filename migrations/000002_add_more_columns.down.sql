@@ -1,0 +1,6 @@
+BEGIN;
+
+ALTER TABLE "pairs" DROP COLUMN "dex";
+ALTER TABLE "pairs" DROP COLUMN "dex";
+
+COMMIT;
