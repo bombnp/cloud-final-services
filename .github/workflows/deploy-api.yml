@@ -10,9 +10,10 @@ on:
       - 'go.sum'
       - 'lib/**'
       - 'api/**'
+      - '.github/workflows/deploy-api.yml'
 
 env:
-  IMAGE_NAME: asia-southeast1-docker.pkg.dev/cloud-final-346107/cloud-final-services/api 
+  IMAGE_NAME: us-west1-docker.pkg.dev/cloud-final-346107/cloud-final-services/api
 
 permissions:
   contents: 'read'
@@ -47,7 +48,7 @@ jobs:
       # Configure Docker to use the gcloud command-line tool as a credential
       # helper for authentication
       - run: |-
-          gcloud auth configure-docker asia-southeast1-docker.pkg.dev
+          gcloud auth configure-docker us-west1-docker.pkg.dev
           
       - name: Extract branch
         run: |
@@ -68,12 +69,12 @@ jobs:
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
-      # Checkout GitOps
+      # Trigger GitOps deployment
       - name: Trigger service deployment in GitOps repo
         run: |-
           curl \
           -u bombnp:${{ secrets.GH_PAT }} \
           -X POST \
           -H "Accept: application/vnd.github.v3+json" \
-          -d '{"event_type":"deploy-service","client_payload":{"namespace":"master","service":"api"}}' \
+          -d '{"event_type":"deploy-service","client_payload":{"namespace":"${{ env.BRANCH }}","service":"api"}}' \
           https://api.github.com/repos/bombnp/cloud-final-gitops/dispatches
