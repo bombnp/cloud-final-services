@@ -5,3 +5,4 @@ migrations/migrate.local.*
 discord/bin
 discord/lib
 discord/pyvenv.cfg
+discord/config.json
