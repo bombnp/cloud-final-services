@@ -37,7 +37,7 @@ func NewCollector(ctx context.Context) (Collector, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "can't get pairs during collector init")
 	}
-	var pairMap map[common.Address]models.Pair
+	pairMap := make(map[common.Address]models.Pair)
 	for _, pair := range pairs {
 		pairMap[common.HexToAddress(pair.PoolAddress)] = pair
 	}
