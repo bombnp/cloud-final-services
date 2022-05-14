@@ -1,8 +1,6 @@
 package services
 
 import (
-	"fmt"
-
 	"github.com/bombnp/cloud-final-services/api/repository"
 )
 
@@ -38,21 +36,9 @@ func (s *Service) GetAllPair() ([]PairResponse, error) {
 
 	for _, e := range query {
 
-		base, err := s.Database.QueryToken(e.BaseAddress)
-
-		if err != nil {
-			return nil, err
-		}
-
-		quote, err := s.Database.QueryToken(e.QuoteAddress)
-
-		if err != nil {
-			return nil, err
-		}
-
 		pair_list = append(pair_list, PairResponse{
 			PoolAddress: e.PoolAddress,
-			PoolName:    fmt.Sprintf("%s/%s", base.Symbol, quote.Symbol),
+			PoolName:    e.Name,
 		})
 
 	}

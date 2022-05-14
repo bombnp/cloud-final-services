@@ -12,6 +12,7 @@ type Pair struct {
 	BaseAddress  string `gorm:"column:base_address"`
 	QuoteAddress string `gorm:"column:quote_address"`
 	IsBaseToken0 bool   `gorm:"column:is_base_token0"`
+	Name         string `gorm:"column:name"`
 }
 
 type PairSubscription struct {
