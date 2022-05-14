@@ -1,0 +1,80 @@
+
+name: Build & Deploy txpublisher to GKE
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'go.mod'
+      - 'go.sum'
+      - 'lib/**'
+      - 'txpublisher/**'
+      - '.github/workflows/deploy-txpublisher.yml'
+
+env:
+  IMAGE_NAME: us-west1-docker.pkg.dev/cloud-final-346107/cloud-final-services/txpublisher
+
+permissions:
+  contents: 'read'
+  id-token: 'write'
+
+jobs:
+  build:
+    name: Setup, Build, and Publish Docker image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v0
+        with:
+          workload_identity_provider: projects/173159973736/locations/global/workloadIdentityPools/cloud-final-pool/providers/github-provider
+          service_account: artifact-registry-access@cloud-final-346107.iam.gserviceaccount.com
+
+      # Configure Docker to use the gcloud command-line tool as a credential
+      # helper for authentication
+      - run: |-
+          gcloud auth configure-docker us-west1-docker.pkg.dev
+          
+      - name: Extract branch
+        run: |
+          echo "BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+
+      - name: Push to GitHub Packages
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: "${{ env.IMAGE_NAME }}:${{ env.BRANCH }}"
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
+          context: .
+          file: txpublisher/Dockerfile
+
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+      # Trigger GitOps deployment
+      - name: Trigger service deployment in GitOps repo
+        run: |-
+          curl \
+          -u bombnp:${{ secrets.GH_PAT }} \
+          -X POST \
+          -H "Accept: application/vnd.github.v3+json" \
+          -d '{"event_type":"deploy-service","client_payload":{"namespace":"${{ env.BRANCH }}","service":"txpublisher"}}' \
+          https://api.github.com/repos/bombnp/cloud-final-gitops/dispatches
