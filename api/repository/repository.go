@@ -12,10 +12,10 @@ func New(pg *gorm.DB) *Databaser {
 	}
 }
 
-func (db *Databaser) InsertNewSubscribe(id, pool, t string) error {
+func (db *Databaser) InsertNewSubscribe(id, pool, t, channel string) error {
 
-	query := `INSERT INTO pair_subscriptions (server_id,pool_address,type) VALUE('?','?','?')`
-	return db.Postgres.Exec(query, id, pool, t).Error
+	query := `INSERT INTO pair_subscriptions (server_id,pool_address,type,channel_id) VALUE('?','?','?','?')`
+	return db.Postgres.Exec(query, id, pool, t, channel).Error
 
 }
 

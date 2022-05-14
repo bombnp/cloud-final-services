@@ -23,7 +23,7 @@ func (h *Handler) AlertSubscribeHandler(c *gin.Context) {
 		return
 	}
 
-	if err := h.s.AlertSubscribe(req.ServerId, req.PoolAddress); err != nil {
+	if err := h.s.AlertSubscribe(req.ServerId, req.PoolAddress, req.ChannelId); err != nil {
 		c.JSON(400, &Logger{
 			Message: err.Error(),
 		})

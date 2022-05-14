@@ -11,7 +11,7 @@ type Service struct {
 }
 
 type Databaser interface {
-	InsertNewSubscribe(id, pool, t string) error
+	InsertNewSubscribe(id, pool, t, channel string) error
 	QueryToken(address string) (repository.Token, error)
 	QueryAllPair() ([]repository.Pair, error)
 }
@@ -22,8 +22,8 @@ func NewService(db Databaser) *Service {
 	}
 }
 
-func (s *Service) AlertSubscribe(id string, pool string) error {
-	return s.Database.InsertNewSubscribe(id, pool, "alert")
+func (s *Service) AlertSubscribe(id string, pool string, channel string) error {
+	return s.Database.InsertNewSubscribe(id, pool, "alert", channel)
 }
 
 func (s *Service) GetAllPair() ([]PairResponse, error) {

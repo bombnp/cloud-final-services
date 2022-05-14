@@ -8,3 +8,8 @@ database:
     password: p
     dbname: test
     sslmode: disable
+  influxdb:
+    url: localhost
+    token: TK
+    bucket: jarb
+    organization: org
