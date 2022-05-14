@@ -21,6 +21,7 @@ type streamer struct {
 	btCache       *ethutils.BlockTimestampCache
 
 	logCh      chan ethtypes.Log
+	logSub     ethereum.Subscription
 	startBlock uint64
 }
 
@@ -75,7 +76,7 @@ func (s *streamer) subscribeLogs() error {
 
 	s.startBlock = startBlock
 	topics := [][]common.Hash{ethutils.GetSyncTopics()}
-	_, err = ethClient.SubscribeFilterLogs(ctx, ethereum.FilterQuery{
+	s.logSub, err = ethClient.SubscribeFilterLogs(ctx, ethereum.FilterQuery{
 		Topics:    topics,
 		Addresses: s.pairAddresses,
 	}, logCh)

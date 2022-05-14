@@ -1,0 +1,17 @@
+postgres:
+  host:
+  port:
+  user:
+  password:
+  dbname:
+  sslmode: disable
+influx:
+  url:
+  token:
+  bucket:
+  organization:
+subscriber:
+  project_id:
+  do_not_create_topic_if_missing: true
+  enable_message_ordering: false
+  subscription_suffix: price-collector

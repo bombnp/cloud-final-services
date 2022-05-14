@@ -42,6 +42,10 @@ func (s *streamer) LoopConsumeLog(ctx context.Context) error {
 			}
 
 			flushTimer.Reset(flushTime)
+		case err := <-s.logSub.Err():
+			errClose := s.pub.Close()
+			log.Println("error while closing publisher", errClose)
+			return errors.Wrap(err, "error during subscription")
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-flushTimer.C:

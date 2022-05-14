@@ -37,7 +37,8 @@ func NewService(config *Config) (*Service, error) {
 		return nil, errors.New("Organization is required")
 	}
 
-	client := influxdb2.NewClient(config.URL, config.Token)
+	client := influxdb2.NewClientWithOptions(config.URL, config.Token, influxdb2.DefaultOptions().
+		SetFlushInterval(1000))
 	queryAPI := client.QueryAPI(config.Organization)
 	writeAPI := client.WriteAPI(config.Organization, config.Bucket)
 	writeAPIBlocking := client.WriteAPIBlocking(config.Organization, config.Bucket)

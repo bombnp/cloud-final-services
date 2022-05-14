@@ -5,14 +5,14 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY ./api ./api
+COPY ./txpublisher ./txpublisher
 COPY ./lib ./lib
 
 ENV GOOS=linux
 ENV CGO_ENABLED=0
 
 RUN go build \
-  -o main ./api/main.go
+  -o main ./txpublisher/main.go
 
 FROM alpine:latest
 
