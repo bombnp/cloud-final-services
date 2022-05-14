@@ -10,6 +10,7 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/bombnp/cloud-final-services/lib/ethutils"
 	"github.com/bombnp/cloud-final-services/lib/pubsub"
+	"github.com/bombnp/cloud-final-services/txpublisher/config"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
 )
@@ -86,6 +87,7 @@ func (s *streamer) ProcessLog(ctx context.Context, log ethtypes.Log) error {
 }
 
 func (s *streamer) publishMessages(ctx context.Context, syncEvents []pubsub.SyncEventMsg, timeTaken time.Duration) {
+	conf := config.InitConfig()
 	pub := s.pub
 	block := syncEvents[0].Block
 	if len(syncEvents) == 0 {
@@ -99,7 +101,11 @@ func (s *streamer) publishMessages(ctx context.Context, syncEvents []pubsub.Sync
 	}
 
 	msg := message.NewMessage(watermill.NewUUID(), out)
-	if err = pub.Publish(ctx, pubsub.SyncEventsTopic, "", msg); err != nil {
+	var orderingKey string
+	if conf.Publisher.EnableMessageOrdering {
+		orderingKey = "sync-events"
+	}
+	if err = pub.Publish(ctx, pubsub.SyncEventsTopic, orderingKey, msg); err != nil {
 		log.Printf("can't publish message to pubsub. block: %d. %s\n", block, err.Error())
 	}
 	log.Println("published block", block, "number of events", len(syncEvents))
