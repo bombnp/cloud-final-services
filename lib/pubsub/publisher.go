@@ -45,8 +45,6 @@ func (p *Publisher) Publish(ctx context.Context, topic string, orderingKey strin
 	if p.closed {
 		return errors.New("Publisher is closed")
 	}
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
 
 	t, err := p.getTopic(ctx, topic)
 	if err != nil {
@@ -60,16 +58,13 @@ func (p *Publisher) Publish(ctx context.Context, topic string, orderingKey strin
 		}
 
 		result := t.Publish(ctx, pubsubMsg)
-
-		// intentionally waiting for each message to finish before publishing a new one if message ordering is enabled
-		if p.config.EnableMessageOrdering {
-			<-result.Ready()
-			_, err = result.Get(ctx)
+		go func(result *googlepubsub.PublishResult) {
+			_, err := result.Get(ctx)
 			if err != nil {
 				t.ResumePublish(orderingKey)
-				return errors.Wrapf(err, "publishing message %s failed", msg.UUID)
+				log.Println("publish message failed", err)
 			}
-		}
+		}(result)
 	}
 
 	return nil

@@ -3,7 +3,7 @@ package redis
 import (
 	"context"
 
-	redis "github.com/go-redis/redis/v8"
+	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
 )
 

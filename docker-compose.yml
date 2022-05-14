@@ -23,9 +23,28 @@ services:
       - cloud-final-postgres:/var/lib/postgresql/data
     ports:
       - '5432:5432'
+  influxdb:
+    image: influxdb:2.0.9
+    container_name: cloud-final-influxdb
+    restart: unless-stopped
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=WpawYFVU94QKfM7y
+      - DOCKER_INFLUXDB_INIT_ORG=cloud-final
+      - DOCKER_INFLUXDB_INIT_BUCKET=prices
+    volumes:
+      - cloud-final-influxdb:/var/lib/influxdb2
+      - cloud-final-influxdb-config:/etc/influxdb2
+    ports:
+      - '8086:8086'
 
 volumes:
   cloud-final-postgres:
     name: cloud-final-postgres
   cloud-final-redis:
     name: cloud-final-redis
+  cloud-final-influxdb:
+    name: cloud-final-influxdb
+  cloud-final-influxdb-config:
+    name: cloud-final-influxdb-config
