@@ -7,8 +7,9 @@ import (
 )
 
 type SyncEventMsg struct {
-	Address  common.Address `json:"address"`
-	Block    uint64         `json:"block"`
-	Reserve0 *big.Int       `json:"reserve0"`
-	Reserve1 *big.Int       `json:"reserve1"`
+	Address   common.Address `json:"address"`
+	Block     uint64         `json:"block"`
+	Timestamp uint64         `json:"timestamp"`
+	Reserve0  *big.Int       `json:"reserve0"`
+	Reserve1  *big.Int       `json:"reserve1"`
 }

@@ -18,6 +18,7 @@ type streamer struct {
 	repo          *repository.Repository
 	pub           *pubsub.Publisher
 	pairAddresses []common.Address
+	btCache       *ethutils.BlockTimestampCache
 
 	logCh      chan ethtypes.Log
 	startBlock uint64
@@ -38,6 +39,7 @@ func NewStreamer(ctx context.Context) (Streamer, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "can't init google cloud publisher")
 	}
+	btCache := ethutils.NewBlockTimestampCache(repo.RedisClient, repo.EthClient)
 
 	pairs, err := repo.GetPairs()
 	if err != nil {
@@ -52,6 +54,7 @@ func NewStreamer(ctx context.Context) (Streamer, error) {
 		repo:          repo,
 		pub:           pub,
 		pairAddresses: pairAddresses,
+		btCache:       btCache,
 	}
 	err = s.subscribeLogs()
 	if err != nil {

@@ -41,13 +41,6 @@ func NewRepository(ctx context.Context) (*Repository, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "can't connect to redis")
 	}
-	defer func() {
-		if err := redisClient.Close(); err != nil {
-			log.Println(errors.Wrap(err, "can't close redis client").Error())
-		} else {
-			log.Println("gracefully stopped redis client")
-		}
-	}()
 	log.Println("connected to redis!")
 	return &Repository{
 		PG:          pg,
