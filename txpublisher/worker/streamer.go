@@ -6,6 +6,7 @@ import (
 
 	"github.com/bombnp/cloud-final-services/lib/ethutils"
 	"github.com/bombnp/cloud-final-services/lib/pubsub"
+	"github.com/bombnp/cloud-final-services/txpublisher/config"
 	"github.com/bombnp/cloud-final-services/txpublisher/repository"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -27,7 +28,17 @@ type Streamer interface {
 	LoopConsumeLog(ctx context.Context) error
 }
 
-func NewStreamer(repo *repository.Repository, pub *pubsub.Publisher) (Streamer, error) {
+func NewStreamer(ctx context.Context) (Streamer, error) {
+	conf := config.InitConfig()
+	repo, err := repository.NewRepository(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "can't create repository")
+	}
+	pub, err := pubsub.NewPublisher(conf.Publisher)
+	if err != nil {
+		return nil, errors.Wrap(err, "can't init google cloud publisher")
+	}
+
 	pairs, err := repo.GetPairs()
 	if err != nil {
 		return nil, errors.Wrap(err, "can't get pairs during streamer init")
