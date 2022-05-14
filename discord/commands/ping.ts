@@ -6,6 +6,9 @@ module.exports = {
 		.setName("ping")
 		.setDescription("Test that the bot is still alive!"),
 	async execute(interaction: CommandInteraction) {
-		await interaction.reply("I am still alive!");
+		await interaction.reply({
+			content: "I am still alive!",
+			ephemeral: true,
+		});
 	},
 };
