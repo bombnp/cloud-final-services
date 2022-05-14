@@ -28,6 +28,7 @@ func (c *collector) LoopCollectEvents(ctx context.Context) error {
 			continue
 		}
 		c.writePricePoints(events)
+		msg.Ack()
 	}
 	return errors.New("channel unexpectedly closed")
 }
@@ -50,24 +51,21 @@ func (c *collector) pointFromEvent(event pubsub.SyncEventMsg) (*write.Point, err
 	if !ok {
 		return nil, errors.New("unknown pair address")
 	}
-	var baseReserve *big.Int
-	var quoteReserve *big.Int
+	baseReserve := new(big.Float)
+	quoteReserve := new(big.Float)
 	if pair.IsBaseToken0 {
-		baseReserve = event.Reserve0
-		quoteReserve = event.Reserve1
+		baseReserve.SetInt(event.Reserve0)
+		quoteReserve.SetInt(event.Reserve1)
 	} else {
-		baseReserve = event.Reserve1
-		quoteReserve = event.Reserve0
+		baseReserve.SetInt(event.Reserve1)
+		quoteReserve.SetInt(event.Reserve0)
 	}
-	price := big.NewInt(0).Div(baseReserve, quoteReserve)
+	price, _ := new(big.Float).Quo(quoteReserve, baseReserve).Float64()
 	tags := map[string]string{
 		"address": event.Address.String(),
 	}
 	fields := map[string]any{
-		"block":        event.Block,
-		"baseReserve":  baseReserve,
-		"quoteReserve": quoteReserve,
-		"price":        price,
+		"price": price,
 	}
 	return influxdb2.NewPoint("price", tags, fields, time.Unix(int64(event.Timestamp), 0)), nil
 }
