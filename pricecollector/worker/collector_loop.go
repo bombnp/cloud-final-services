@@ -42,8 +42,8 @@ func (c *collector) writePricePoints(events []pubsub.SyncEventMsg) {
 			continue
 		}
 		writeApi.WritePoint(p)
-		log.Println("Wrote point", p)
 	}
+	log.Println("Wrote points of block", events[0].Block)
 }
 
 func (c *collector) pointFromEvent(event pubsub.SyncEventMsg) (*write.Point, error) {
