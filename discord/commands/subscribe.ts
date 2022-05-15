@@ -6,6 +6,8 @@ import {
 } from "@discordjs/builders";
 import { CommandInteraction, MessageEmbed } from "discord.js";
 
+interface Pair {}
+
 let command = new SlashCommandBuilder()
     .setName("subscribe")
     .setDescription("Subscribe to alert bot")
@@ -31,6 +33,7 @@ let command = new SlashCommandBuilder()
 module.exports = {
     data: command,
     async execute(interaction: CommandInteraction) {
+        const server_id = interaction.guildId;
         const pair = interaction.options.getString("pair");
         const channel = interaction.options.getChannel("channel", false);
         let channel_target;

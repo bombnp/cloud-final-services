@@ -1,9 +1,18 @@
-import { Client, Intents, Interaction, Collection } from "discord.js";
+import {
+    Client,
+    Intents,
+    Interaction,
+    Collection,
+    MessageEmbed,
+    GuildTextBasedChannel,
+} from "discord.js";
 import { REST } from "@discordjs/rest";
 import { Routes } from "discord-api-types/v9";
 import dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
+import cron from "node-cron";
+import { channel } from "diagnostics_channel";
 
 dotenv.config();
 
@@ -90,3 +99,37 @@ client.on("interactionCreate", async (interaction: Interaction) => {
 });
 
 client.login(process.env.TOKEN);
+
+function newAlert(percentage: string, poolName: string): MessageEmbed {
+    return new MessageEmbed();
+}
+
+function pushMessage(
+    client: Client,
+    guild_id: string,
+    channel_id: string,
+    message?: string,
+    embed?: MessageEmbed[]
+) {
+    const guild = client.guilds.cache.find((guild) => guild.id === guild_id);
+    if (!guild) return;
+    if (!guild.available) return;
+
+    const channel = guild.channels.cache.find(
+        (channel) => channel.id === channel_id
+    );
+    if (!channel) return;
+    if (!channel.isText()) return;
+
+    const text_channel: GuildTextBasedChannel = channel;
+
+    text_channel.send({
+        content: message,
+        embeds: embed,
+    });
+}
+
+// run alert check updated every minute
+cron.schedule("* * * * *", () => {
+    console.log("running a task every minute");
+});
