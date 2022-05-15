@@ -2,31 +2,32 @@ package repository
 
 import (
 	"github.com/bombnp/cloud-final-services/lib/influxdb"
+	"github.com/bombnp/cloud-final-services/lib/postgres/models"
 	"gorm.io/gorm"
 )
 
-type Databaser struct {
+type Repository struct {
 	Postgres *gorm.DB
 	InfluxDB *influxdb.Service
 }
 
-func New(pg *gorm.DB, influx *influxdb.Service) *Databaser {
-	return &Databaser{
+func New(pg *gorm.DB, influx *influxdb.Service) *Repository {
+	return &Repository{
 		Postgres: pg,
 		InfluxDB: influx,
 	}
 }
 
-func (db *Databaser) InsertNewSubscribe(id, pool, t, channel string) error {
+func (db *Repository) InsertNewSubscribe(id, pool, t, channel string) error {
 
 	query := `INSERT INTO pair_subscriptions (server_id,pool_address,type,channel_id) VALUE('?','?','?','?')`
 	return db.Postgres.Exec(query, id, pool, t, channel).Error
 
 }
 
-func (db *Databaser) QueryToken(address string) (Token, error) {
+func (db *Repository) QueryToken(address string) (models.Token, error) {
 
-	var token Token
+	var token models.Token
 
 	query := `SELECT * FROM tokens where address = ?`
 	err := db.Postgres.Raw(query, address).First(&token).Error
@@ -35,15 +36,15 @@ func (db *Databaser) QueryToken(address string) (Token, error) {
 
 }
 
-func (db *Databaser) QueryAllPair() ([]Pair, error) {
-	var pair_list []Pair
+func (db *Repository) QueryAllPairs() ([]models.Pair, error) {
+	var pairList []models.Pair
 
 	query := `SELECT * FROM pairs`
-	err := db.Postgres.Raw(query).Scan(pair_list).Error
+	err := db.Postgres.Raw(query).Scan(&pairList).Error
 
 	if err != nil {
 		return nil, err
 	} else {
-		return pair_list, nil
+		return pairList, nil
 	}
 }

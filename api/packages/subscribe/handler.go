@@ -1,4 +1,4 @@
-package services
+package subscribe
 
 import "github.com/gin-gonic/gin"
 
@@ -12,9 +12,9 @@ func NewHandler(s *Service) *Handler {
 	}
 }
 
-func (h *Handler) AlertSubscribeHandler(c *gin.Context) {
+func (h *Handler) PostAlertSubscribe(c *gin.Context) {
 
-	var req SubscribeRequest
+	var req AlertSubscribeRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(400, &Logger{
@@ -33,20 +33,5 @@ func (h *Handler) AlertSubscribeHandler(c *gin.Context) {
 	c.JSON(200, &Logger{
 		Message: "OK",
 	})
-
-}
-
-func (h *Handler) GetAllPairHandler(c *gin.Context) {
-
-	resp, err := h.s.GetAllPair()
-
-	if err != nil {
-		c.JSON(400, &Logger{
-			Message: err.Error(),
-		})
-		return
-	}
-
-	c.JSON(200, resp)
 
 }
