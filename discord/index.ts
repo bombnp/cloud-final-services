@@ -12,7 +12,6 @@ import dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
 import cron from "node-cron";
-import { channel } from "diagnostics_channel";
 
 dotenv.config();
 
@@ -101,7 +100,18 @@ client.on("interactionCreate", async (interaction: Interaction) => {
 client.login(process.env.TOKEN);
 
 function newAlert(percentage: string, poolName: string): MessageEmbed {
-    return new MessageEmbed();
+    return new MessageEmbed()
+        .setColor("RED")
+        .setTitle("Alert!")
+        .addField("\u200B", "\u200B")
+        .addField("Pair address", poolName, true)
+        .addField("\u200B", "\u200B", true)
+        .addField("Percentage", percentage, true)
+        .setAuthor({
+            iconURL:
+                "https://play-lh.googleusercontent.com/0bVs9-3xq573KI9u2hqZ86ARwltcoBv4RGOTI58Sw-xClAfl8dYdd9eYn2vf0D2HMA",
+            name: "Alert bot",
+        });
 }
 
 function pushMessage(
