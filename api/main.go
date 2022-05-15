@@ -31,7 +31,6 @@ func main() {
 	router := gin.Default()
 	router.GET("/", func(c *gin.Context) {
 		c.String(200, "Hello, World!")
-		return
 	})
 
 	repo := repository.New(pg, influx)
