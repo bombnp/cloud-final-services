@@ -6,7 +6,8 @@ import (
 
 	"github.com/bombnp/cloud-final-services/api/config"
 	"github.com/bombnp/cloud-final-services/api/repository"
-	"github.com/bombnp/cloud-final-services/api/services"
+	"github.com/bombnp/cloud-final-services/api/services/pair"
+	"github.com/bombnp/cloud-final-services/api/services/subscribe"
 	"github.com/bombnp/cloud-final-services/lib/influxdb"
 	"github.com/bombnp/cloud-final-services/lib/postgres"
 	"github.com/gin-gonic/gin"
@@ -16,14 +17,12 @@ func main() {
 	conf := config.InitConfig()
 
 	pg, err := postgres.New(&conf.Database.Postgres)
-
 	if err != nil {
 		log.Fatalln("Postgres are not connected")
 		return
 	}
 
 	influx, err := influxdb.NewService(&conf.Database.InfluxDB)
-
 	if err != nil {
 		log.Fatalln("Postgres are not connected")
 		return
@@ -35,14 +34,18 @@ func main() {
 		return
 	})
 
-	service := services.NewHandler(services.NewService(repository.New(pg, influx)))
-	apiHandler := router.Group("/api")
-	{
-		apiHandler.GET("/pair", service.GetAllPairHandler)
+	repo := repository.New(pg, influx)
 
-		subscribeHandler := apiHandler.Group("/subscribe")
+	pairHandler := pair.NewHandler(pair.NewService(repo))
+	subscribeHandler := subscribe.NewHandler(subscribe.NewService(repo))
+
+	apiGroup := router.Group("/api")
+	{
+		apiGroup.GET("/pair", pairHandler.GetPairs)
+
+		subscribeGroup := apiGroup.Group("/subscribe")
 		{
-			subscribeHandler.POST("/alert", service.AlertSubscribeHandler)
+			subscribeGroup.POST("/alert", subscribeHandler.PostAlertSubscribe)
 		}
 	}
 
