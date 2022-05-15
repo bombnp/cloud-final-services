@@ -2,6 +2,7 @@ package repository
 
 import (
 	"github.com/bombnp/cloud-final-services/lib/influxdb"
+	"github.com/bombnp/cloud-final-services/lib/postgres/models"
 	"gorm.io/gorm"
 )
 
@@ -10,8 +11,8 @@ type Repository struct {
 	InfluxDB *influxdb.Service
 }
 
-func New(pg *gorm.DB, influx *influxdb.Service) *Databaser {
-	return &Databaser{
+func New(pg *gorm.DB, influx *influxdb.Service) *Repository {
+	return &Repository{
 		Postgres: pg,
 		InfluxDB: influx,
 	}
