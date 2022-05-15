@@ -7,6 +7,7 @@ import (
 	"github.com/bombnp/cloud-final-services/api/config"
 	"github.com/bombnp/cloud-final-services/api/repository"
 	"github.com/bombnp/cloud-final-services/api/services"
+	"github.com/bombnp/cloud-final-services/lib/influxdb"
 	"github.com/bombnp/cloud-final-services/lib/postgres"
 	"github.com/gin-gonic/gin"
 )
@@ -21,13 +22,20 @@ func main() {
 		return
 	}
 
+	influx, err := influxdb.NewService(&conf.Database.InfluxDB)
+
+	if err != nil {
+		log.Fatalln("Postgres are not connected")
+		return
+	}
+
 	router := gin.Default()
 	router.GET("/", func(c *gin.Context) {
 		c.String(200, "Hello, World!")
 		return
 	})
 
-	service := services.NewHandler(services.NewService(repository.New(pg)))
+	service := services.NewHandler(services.NewService(repository.New(pg, influx)))
 	api_handler := router.Group("/api")
 	{
 		api_handler.GET("/pair", service.GetAllPairHandler)
