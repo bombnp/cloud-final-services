@@ -5,9 +5,9 @@ import (
 	"log"
 
 	"github.com/bombnp/cloud-final-services/api/config"
+	"github.com/bombnp/cloud-final-services/api/packages/pair"
+	"github.com/bombnp/cloud-final-services/api/packages/subscribe"
 	"github.com/bombnp/cloud-final-services/api/repository"
-	"github.com/bombnp/cloud-final-services/api/services/pair"
-	"github.com/bombnp/cloud-final-services/api/services/subscribe"
 	"github.com/bombnp/cloud-final-services/lib/influxdb"
 	"github.com/bombnp/cloud-final-services/lib/postgres"
 	"github.com/gin-gonic/gin"
