@@ -1,12 +1,30 @@
 import {
-    EmbedBuilder,
     SlashCommandBuilder,
     SlashCommandChannelOption,
     SlashCommandStringOption,
 } from "@discordjs/builders";
+import axios from "axios";
+import { ChannelType } from "discord-api-types/v10";
 import { CommandInteraction, MessageEmbed } from "discord.js";
+import dotenv from "dotenv";
 
-interface Pair {}
+dotenv.config();
+
+interface Pair {
+    pool_address: string;
+    pool_name: string;
+    is_base_token0: string;
+}
+
+async function getPairChoice(): Promise<Pair[]> {
+    let pair_list: Pair[];
+    await axios
+        .get<Pair[]>(process.env.API_URL + "/api/pair")
+        .then((response) => {
+            pair_list = response.data;
+        });
+    return pair_list;
+}
 
 let command = new SlashCommandBuilder()
     .setName("subscribe")
@@ -15,11 +33,16 @@ let command = new SlashCommandBuilder()
         option = option
             .setName("pair")
             .setDescription("Pair that you wanna subscribe")
-            .setRequired(true)
-            .addChoices({
-                name: "BTC",
-                value: "btc/es",
+            .setRequired(true);
+
+        getPairChoice().then((pair_list) => {
+            pair_list.map((pair) => {
+                option.setChoices({
+                    name: pair.pool_name,
+                    value: pair.pool_address,
+                });
             });
+        });
 
         return option;
     })
@@ -27,19 +50,32 @@ let command = new SlashCommandBuilder()
         return option
             .setName("channel")
             .setDescription("Channel that you want for showing alert")
-            .setRequired(false);
+            .setRequired(false)
+            .addChannelTypes(ChannelType.GuildText);
     });
 
 module.exports = {
     data: command,
     async execute(interaction: CommandInteraction) {
-        const server_id = interaction.guildId;
+        const id = interaction.guildId;
         const pair = interaction.options.getString("pair");
-        const channel = interaction.options.getChannel("channel", false);
+        const channel = interaction.options.getChannel("channel");
         let channel_target;
 
         if (!channel) channel_target = interaction.channel;
-        else channel_target = channel;
+        else {
+            channel_target = channel;
+        }
+
+        axios
+            .post(process.env.API_URL + "/api/subscribe/alert", {
+                server_id: id,
+                pool: pair,
+                channel: channel_target.id,
+            })
+            .catch((err) => {
+                console.log(err.data);
+            });
 
         const embed: MessageEmbed = new MessageEmbed()
             .setColor("GREEN")
