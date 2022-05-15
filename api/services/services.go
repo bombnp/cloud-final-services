@@ -5,16 +5,10 @@ import (
 )
 
 type Service struct {
-	Database Databaser
+	Database *repository.Repository
 }
 
-type Databaser interface {
-	InsertNewSubscribe(id, pool, t, channel string) error
-	QueryToken(address string) (repository.Token, error)
-	QueryAllPair() ([]repository.Pair, error)
-}
-
-func NewService(db Databaser) *Service {
+func NewService(db *repository.Repository) *Service {
 	return &Service{
 		Database: db,
 	}
@@ -26,22 +20,22 @@ func (s *Service) AlertSubscribe(id string, pool string, channel string) error {
 
 func (s *Service) GetAllPair() ([]PairResponse, error) {
 
-	query, err := s.Database.QueryAllPair()
+	query, err := s.Database.QueryAllPairs()
 
 	if err != nil {
 		return nil, err
 	}
 
-	var pair_list []PairResponse
+	var pairList []PairResponse
 
 	for _, e := range query {
 
-		pair_list = append(pair_list, PairResponse{
+		pairList = append(pairList, PairResponse{
 			PoolAddress: e.PoolAddress,
 			PoolName:    e.Name,
 		})
 
 	}
 
-	return pair_list, nil
+	return pairList, nil
 }

@@ -36,13 +36,13 @@ func main() {
 	})
 
 	service := services.NewHandler(services.NewService(repository.New(pg, influx)))
-	api_handler := router.Group("/api")
+	apiHandler := router.Group("/api")
 	{
-		api_handler.GET("/pair", service.GetAllPairHandler)
+		apiHandler.GET("/pair", service.GetAllPairHandler)
 
-		subscribe_handler := api_handler.Group("/subscribe")
+		subscribeHandler := apiHandler.Group("/subscribe")
 		{
-			subscribe_handler.POST("/alert", service.AlertSubscribeHandler)
+			subscribeHandler.POST("/alert", service.AlertSubscribeHandler)
 		}
 	}
 
