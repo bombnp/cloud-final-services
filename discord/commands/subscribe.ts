@@ -45,6 +45,8 @@ let command = new SlashCommandBuilder()
             });
         });
 
+        console.log(option.toJSON());
+
         return option;
     })
     .addChannelOption((option: SlashCommandChannelOption) => {
