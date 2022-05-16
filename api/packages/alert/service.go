@@ -31,6 +31,9 @@ func NewService(repository *repository.Repository, pub *pubsub.Publisher) *Servi
 }
 
 func (s *Service) SendAlerts(ctx context.Context, alerts []PriceAlert) error {
+	if len(alerts) == 0 {
+		return nil
+	}
 	pairSubMap, err := s.repository.QueryPairSubscriptionsMap()
 	if err != nil {
 		return errors.Wrap(err, "can't get pair subscriptions map")
@@ -84,6 +87,9 @@ func (s *Service) SendAlerts(ctx context.Context, alerts []PriceAlert) error {
 }
 
 func (s *Service) publishAlertMessages(ctx context.Context, alertMessages []pubsub.PriceAlertMsg) error {
+	if len(alertMessages) == 0 {
+		return nil
+	}
 	conf := config.InitConfig()
 	pub := s.pub
 	out, err := json.Marshal(alertMessages)

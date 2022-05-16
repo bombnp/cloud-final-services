@@ -37,6 +37,9 @@ type dailySummary struct {
 }
 
 func (s *Service) SendSummaryReports(ctx context.Context, summaryMap map[common.Address]dailySummary) error {
+	if len(summaryMap) == 0 {
+		return nil
+	}
 	pairSubMap, err := s.repository.QueryPairSubscriptionsMap()
 	if err != nil {
 		return errors.Wrap(err, "can't get pair subscriptions map")
@@ -77,6 +80,9 @@ func (s *Service) SendSummaryReports(ctx context.Context, summaryMap map[common.
 }
 
 func (s *Service) publishSummaryMessages(ctx context.Context, summaryMessages []pubsub.PriceSummaryMsg) error {
+	if len(summaryMessages) == 0 {
+		return nil
+	}
 	conf := config.InitConfig()
 	pub := s.pub
 	out, err := json.Marshal(summaryMessages)
