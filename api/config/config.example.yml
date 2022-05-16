@@ -13,3 +13,7 @@ database:
     token: TK
     bucket: jarb
     organization: org
+  redis:
+    address: pok
+    password: p
+    database: db

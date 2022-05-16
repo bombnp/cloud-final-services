@@ -15,6 +15,7 @@ import (
 	"github.com/bombnp/cloud-final-services/lib/postgres/models"
 	"github.com/bombnp/cloud-final-services/lib/pubsub"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
 )
 
@@ -40,7 +41,30 @@ func (s *Service) SendAlerts(ctx context.Context, alerts []PriceAlert) error {
 		return errors.Wrap(err, "can't get pair subscriptions map")
 	}
 	var alertMessages []pubsub.PriceAlertMsg
+
+	tm := time.Now().Unix()
+
 	for _, alert := range alerts {
+
+		lastTime, err := s.repository.Redis.Get(ctx, "Pair: "+alert.Address.String()).Int64()
+
+		if err != nil {
+			if err != redis.Nil {
+				return errors.Wrap(err, "redis error")
+			}
+		} else {
+
+			if tm-lastTime < 3600 {
+				continue
+			}
+		}
+
+		err = s.repository.Redis.Set(ctx, "Pair: "+alert.Address.String(), tm, 0).Err()
+
+		if err != nil {
+			return errors.Wrap(err, "redis error")
+		}
+
 		pairSubs, ok := pairSubMap[alert.Address]
 		if !ok {
 			continue
