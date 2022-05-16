@@ -38,7 +38,7 @@ let command = new SlashCommandBuilder()
         getPairChoice().then((pair_list) => {
             pair_list.map((pair) => {
                 console.log(pair.pool_name + ": " + pair.pool_address);
-                option.setChoices({
+                option = option.addChoices({
                     name: pair.pool_name,
                     value: pair.pool_address,
                 });
