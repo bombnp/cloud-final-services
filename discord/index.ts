@@ -158,6 +158,14 @@ cron.schedule("*/2 * * * *", () => {
         change: number;
     }
 
+    interface Subscription {
+        id: number;
+        server_id: string;
+        pool_address: string;
+        type: string;
+        channel_id: string;
+    }
+
     axios.get(process.env.API_URL + "/api/alert").then((response) => {
         let data: Alert[];
         data = response.data;
@@ -165,6 +173,34 @@ cron.schedule("*/2 * * * *", () => {
         data.map((alert) => {
             if (temp.has(alert.address)) {
                 if (tm - temp.get(alert.address) > 3600) {
+                    if (alert.change > 5 || alert.change < -5) {
+                        axios
+                            .get(process.env.API_URL + "/api/subscribe/alert", {
+                                params: {
+                                    address: alert.address,
+                                },
+                            })
+                            .then((response) => {
+                                let sub: Subscription[];
+
+                                sub = response.data;
+
+                                sub.map((s) => {
+                                    pushMessage(
+                                        client,
+                                        s.server_id,
+                                        s.channel_id,
+                                        "",
+                                        [
+                                            newAlert(
+                                                alert.change.toString(),
+                                                alert.address
+                                            ),
+                                        ]
+                                    );
+                                });
+                            });
+                    }
                 }
             }
         });
