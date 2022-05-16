@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS "pair_subscriptions"
     "server_id"    TEXT NOT NULL,
     "pool_address" TEXT NOT NULL,
     "type"         TEXT NOT NULL,
-    PRIMARY KEY ("pool_address"),
+    PRIMARY KEY ("id"),
     CONSTRAINT pool_address_FK FOREIGN KEY ("pool_address") REFERENCES pairs ("pool_address") ON DELETE CASCADE
 );
 

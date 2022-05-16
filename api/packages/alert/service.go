@@ -2,26 +2,107 @@ package alert
 
 import (
 	"context"
+	"encoding/json"
+	"log"
+	"math"
 	"time"
 
+	"github.com/ThreeDotsLabs/watermill"
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/bombnp/cloud-final-services/api/config"
 	"github.com/bombnp/cloud-final-services/api/repository"
 	"github.com/bombnp/cloud-final-services/lib/influxdb"
+	"github.com/bombnp/cloud-final-services/lib/postgres/models"
+	"github.com/bombnp/cloud-final-services/lib/pubsub"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 )
 
 type Service struct {
 	repository *repository.Repository
+	pub        *pubsub.Publisher
 }
 
-func NewService(db *repository.Repository) *Service {
+func NewService(repository *repository.Repository, pub *pubsub.Publisher) *Service {
 	return &Service{
-		repository: db,
+		repository: repository,
+		pub:        pub,
 	}
 }
 
-func (s *Service) GetTokenAlertSummary(ctx context.Context) (map[common.Address]AlertSummary, error) {
+func (s *Service) SendAlerts(ctx context.Context, alerts []PriceAlert) error {
+	pairSubMap, err := s.repository.QueryPairSubscriptionsMap()
+	if err != nil {
+		return errors.Wrap(err, "can't get pair subscriptions map")
+	}
+	pairNames, err := s.repository.QueryPairNames()
+	if err != nil {
+		return errors.Wrap(err, "can't get pair subscriptions map")
+	}
+	var alertMessages []pubsub.PriceAlertMsg
+	for _, alert := range alerts {
+		pairSubs, ok := pairSubMap[alert.Address]
+		if !ok {
+			continue
+		}
+		for _, pairSub := range pairSubs {
+			if pairSub.Type == models.AlertSubscription {
+				alertMsg := pubsub.PriceAlertMsg{
+					ServerId:    pairSub.ServerId,
+					PoolAddress: pairSub.PoolAddress,
+					ChannelId:   pairSub.ChannelId,
+					PairName:    pairNames[alert.Address],
+					Change:      alert.Change,
+					Since:       alert.Since.Unix(),
+				}
+				alertMessages = append(alertMessages, alertMsg)
+			}
+		}
+	}
+	err = s.publishAlertMessages(ctx, alertMessages)
+	if err != nil {
+		return errors.Wrap(err, "can't publish alerts")
+	}
+	return nil
+}
+
+func (s *Service) publishAlertMessages(ctx context.Context, alertMessages []pubsub.PriceAlertMsg) error {
+	conf := config.InitConfig()
+	pub := s.pub
+	out, err := json.Marshal(alertMessages)
+	if err != nil {
+		return errors.Wrap(err, "can't marshal alerts to json")
+	}
+
+	msg := message.NewMessage(watermill.NewUUID(), out)
+	var orderingKey string
+	if conf.Publisher.EnableMessageOrdering {
+		orderingKey = pubsub.PriceAlertsTopic
+	}
+	if err = pub.Publish(ctx, pubsub.PriceAlertsTopic, orderingKey, msg); err != nil {
+		return errors.Wrap(err, "can't publish message to pubsub")
+	}
+	log.Printf("published %d alerts\n", len(alertMessages))
+	return nil
+}
+
+type PriceSummary struct {
+	Close    float64
+	High     float64
+	HighTime time.Time
+	Low      float64
+	LowTime  time.Time
+}
+
+type PriceAlert struct {
+	Address common.Address
+	Change  float64
+	Since   time.Time
+}
+
+const changeThreshold = 0.05
+
+func (s *Service) GetTokenAlerts(ctx context.Context) ([]PriceAlert, error) {
 	conf := config.InitConfig()
 	currentTime := time.Now()
 	args := &alertSummaryTemplateArgs{
@@ -34,7 +115,7 @@ func (s *Service) GetTokenAlertSummary(ctx context.Context) (map[common.Address]
 		return nil, errors.Wrap(err, "error during influx query")
 	}
 
-	summaryMap := make(map[common.Address]AlertSummary)
+	summaryMap := make(map[common.Address]PriceSummary)
 	var currentTable string
 	for result.Next() {
 		if result.TableChanged() {
@@ -45,7 +126,7 @@ func (s *Service) GetTokenAlertSummary(ctx context.Context) (map[common.Address]
 		tm := result.Record().Time()
 		summary, ok := summaryMap[address]
 		if !ok {
-			summary = AlertSummary{}
+			summary = PriceSummary{}
 		}
 		switch currentTable {
 		case "high":
@@ -54,19 +135,50 @@ func (s *Service) GetTokenAlertSummary(ctx context.Context) (map[common.Address]
 		case "low":
 			summary.Low = result.Record().Value().(float64)
 			summary.LowTime = tm
+		case "close":
+			summary.Close = result.Record().Value().(float64)
 		}
 		summaryMap[address] = summary
 
 	}
+	var alerts []PriceAlert
 	for address, summary := range summaryMap {
-		if summary.HighTime.Before(summary.LowTime) {
-			summary.Change = (summary.High - summary.Low) / summary.High
-		} else {
-			summary.Change = (summary.High - summary.Low) / summary.Low
+		changeLow := (summary.Close - summary.Low) / summary.Low
+		changeHigh := (summary.Close - summary.High) / summary.High
+		if address == common.HexToAddress("0x05faf555522fa3f93959f86b41a380866609") {
+			log.Println(changeLow, changeHigh)
 		}
-		summaryMap[address] = summary
+		if summary.HighTime.After(summary.LowTime) {
+			if math.Abs(changeHigh) >= changeThreshold {
+				alerts = append(alerts, PriceAlert{
+					Address: address,
+					Change:  changeHigh,
+					Since:   summary.HighTime,
+				})
+			} else if math.Abs(changeLow) >= changeThreshold {
+				alerts = append(alerts, PriceAlert{
+					Address: address,
+					Change:  changeLow,
+					Since:   summary.LowTime,
+				})
+			}
+		} else {
+			if math.Abs(changeLow) >= changeThreshold {
+				alerts = append(alerts, PriceAlert{
+					Address: address,
+					Change:  changeLow,
+					Since:   summary.LowTime,
+				})
+			} else if math.Abs(changeHigh) >= changeThreshold {
+				alerts = append(alerts, PriceAlert{
+					Address: address,
+					Change:  changeHigh,
+					Since:   summary.HighTime,
+				})
+			}
+		}
 	}
-	return summaryMap, nil
+	return alerts, nil
 }
 
 type alertSummaryTemplateArgs struct {
@@ -88,4 +200,10 @@ from(bucket: "{{.Bucket}}")
   |> filter(fn: (r) => r["_field"] == "price")
   |> min()
   |> yield(name: "low")
+from(bucket: "{{.Bucket}}")
+  |> range(start: {{.Start}}, stop: {{.Stop}})
+  |> filter(fn: (r) => r["_measurement"] == "price")
+  |> filter(fn: (r) => r["_field"] == "price")
+  |> last()
+  |> yield(name: "close")
 `)
