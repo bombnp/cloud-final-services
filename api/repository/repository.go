@@ -25,6 +25,16 @@ func (db *Repository) InsertNewSubscribe(id, pool, t, channel string) error {
 
 }
 
+func (db *Repository) QuerySubscribeByAddress(address string) ([]models.PairSubscription, error) {
+	query := `SELECT * FROM pair_subscriptions WHERE pool_address = ?`
+
+	var q []models.PairSubscription
+
+	err := db.Postgres.Raw(query, address).Scan(&q).Error
+
+	return q, err
+}
+
 func (db *Repository) QueryToken(address string) (models.Token, error) {
 
 	var token models.Token

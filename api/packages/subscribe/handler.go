@@ -12,6 +12,30 @@ func NewHandler(s *Service) *Handler {
 	}
 }
 
+func (h *Handler) GetAlertSubscribe(c *gin.Context) {
+
+	var req GetAlertRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, &Logger{
+			Message: "Wrong body format",
+		})
+		return
+	}
+
+	resp, err := h.s.GetAlert(req.Address)
+
+	if err != nil {
+		c.JSON(400, &Logger{
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, resp)
+
+}
+
 func (h *Handler) PostAlertSubscribe(c *gin.Context) {
 
 	var req AlertSubscribeRequest

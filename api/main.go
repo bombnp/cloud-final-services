@@ -47,6 +47,7 @@ func main() {
 
 		subscribeGroup := apiGroup.Group("/subscribe")
 		{
+			subscribeGroup.GET("/alert", subscribeHandler.GetAlertSubscribe)
 			subscribeGroup.POST("/alert", subscribeHandler.PostAlertSubscribe)
 		}
 	}

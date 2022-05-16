@@ -15,8 +15,8 @@ type AlertSummary struct {
 }
 
 type AlertResponse struct {
-	Address string
-	High    float64
-	Low     float64
-	Change  float64
+	Address string  `json:"address"`
+	High    float64 `json:"high"`
+	Low     float64 `json:"low"`
+	Change  float64 `json:"change"`
 }

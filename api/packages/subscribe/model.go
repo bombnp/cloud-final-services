@@ -6,6 +6,10 @@ type AlertSubscribeRequest struct {
 	ChannelId   string `json:"channel_id"`
 }
 
+type GetAlertRequest struct {
+	Address string `json:"address"`
+}
+
 type Logger struct {
 	Message string `json:"message"`
 }
