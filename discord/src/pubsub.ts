@@ -1,6 +1,7 @@
 import { Message, PubSub } from '@google-cloud/pubsub'
 import { MessageEmbed } from 'discord.js'
 import { pushMessage } from './client'
+import { formatDuration } from './util'
 
 const TOPIC_PRICE_ALERT = 'price-alerts'
 const TOPIC_PRICE_SUMMARY = 'price-summary'
@@ -35,19 +36,17 @@ function onReceiveAlert(message: Message) {
     for (const alert of alerts) {
         const embed = new MessageEmbed()
             .setColor('RED')
-            .setTitle('Alert!')
+            .setTitle(`Price Alert for ${alert.pairName}!`)
             .addField('Pair', alert.pairName, true)
             .addField('\u200B', '\u200B', true)
             .addField('Address', alert.poolAddress, true)
             .addField('Change', `${(alert.change * 100).toFixed(2)}%`, true)
             .addField('\u200B', '\u200B', true)
-            // TODO: format this nicely
-            .addField('Since', new Date(alert.since * 1000).toISOString(), true)
-            .setAuthor({
-                iconURL:
-                    'https://play-lh.googleusercontent.com/0bVs9-3xq573KI9u2hqZ86ARwltcoBv4RGOTI58Sw-xClAfl8dYdd9eYn2vf0D2HMA',
-                name: 'Alert bot',
-            })
+            .addField(
+                'Since',
+                formatDuration(Date.now() / 1000 - alert.since),
+                true
+            )
         pushMessage(alert.serverId, alert.channelId, null, [embed])
     }
     message.ack()
@@ -69,11 +68,6 @@ function onReceiveSummary(message: Message) {
             .addField('\u200B', '\u200B', true)
             .addField('Low', summary.low.toFixed(3), true)
             .addField('Change', `${(summary.change * 100).toFixed(2)}%`, true)
-            .setAuthor({
-                iconURL:
-                    'https://play-lh.googleusercontent.com/0bVs9-3xq573KI9u2hqZ86ARwltcoBv4RGOTI58Sw-xClAfl8dYdd9eYn2vf0D2HMA',
-                name: 'Alert bot',
-            })
         pushMessage(summary.serverId, summary.channelId, null, [embed])
     }
     message.ack()

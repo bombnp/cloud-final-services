@@ -38,18 +38,10 @@ function SubscriptionEmbed(
     return new MessageEmbed()
         .setColor(successful ? 'GREEN' : 'RED')
         .setTitle(`Subscription ${successful ? 'complete' : 'failed'}`)
-        .setThumbnail(
-            'https://play-lh.googleusercontent.com/0bVs9-3xq573KI9u2hqZ86ARwltcoBv4RGOTI58Sw-xClAfl8dYdd9eYn2vf0D2HMA'
-        )
         .addField('\u200B', '\u200B')
         .addField('Pair', address, true)
         .addField('\u200B', '\u200B', true)
         .addField('Alert channel', channel.toString(), true)
-        .setAuthor({
-            iconURL:
-                'https://play-lh.googleusercontent.com/0bVs9-3xq573KI9u2hqZ86ARwltcoBv4RGOTI58Sw-xClAfl8dYdd9eYn2vf0D2HMA',
-            name: 'Alert bot',
-        })
 }
 
 module.exports = {
