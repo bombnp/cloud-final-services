@@ -1,6 +1,8 @@
 package alert
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+)
 
 type Handler struct {
 	s *Service
@@ -12,28 +14,23 @@ func NewHandler(s *Service) *Handler {
 	}
 }
 
-func (h *Handler) GetTokenAlertSummaryHandler(c *gin.Context) {
+func (h *Handler) TriggerPriceAlert(c *gin.Context) {
 
-	summary_map, err := h.s.GetTokenAlertSummary(c)
-
+	alerts, err := h.s.GetTokenAlerts(c)
 	if err != nil {
-		c.JSON(400, Logger{
+		c.JSON(500, Logger{
 			Message: err.Error(),
 		})
 		return
 	}
 
-	var response []AlertResponse
-
-	for address, summary := range summary_map {
-		response = append(response, AlertResponse{
-			Address: address.Hex(),
-			High:    summary.High,
-			Low:     summary.Low,
-			Change:  summary.Change,
+	err = h.s.SendAlerts(c, alerts)
+	if err != nil {
+		c.JSON(500, Logger{
+			Message: err.Error(),
 		})
+		return
 	}
 
-	c.JSON(200, response)
-
+	c.JSON(200, "OK")
 }

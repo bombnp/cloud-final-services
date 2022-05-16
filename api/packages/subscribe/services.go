@@ -16,7 +16,7 @@ func NewService(db *repository.Repository) *Service {
 }
 
 func (s *Service) AlertSubscribe(id string, pool string, channel string) error {
-	return s.repository.InsertNewSubscribe(id, pool, "alert", channel)
+	return s.repository.InsertNewSubscribe(id, pool, models.AlertSubscription, channel)
 }
 
 func (s *Service) GetAlert(address string) ([]models.PairSubscription, error) {

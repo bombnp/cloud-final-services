@@ -7,6 +7,7 @@ import (
 
 	"github.com/bombnp/cloud-final-services/lib/influxdb"
 	"github.com/bombnp/cloud-final-services/lib/postgres"
+	"github.com/bombnp/cloud-final-services/lib/pubsub"
 	"github.com/spf13/viper"
 )
 
@@ -14,8 +15,9 @@ var configOnce sync.Once
 var config *Config
 
 type Config struct {
-	Server   ServerConfig   `mapstructure:"server"`
-	Database DatabaseConfig `mapstructure:"database"`
+	Server    ServerConfig            `mapstructure:"server"`
+	Database  DatabaseConfig          `mapstructure:"database"`
+	Publisher *pubsub.PublisherConfig `mapstructure:"publisher"`
 }
 
 type ServerConfig struct {

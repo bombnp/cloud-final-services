@@ -11,6 +11,7 @@ import (
 	"github.com/bombnp/cloud-final-services/api/repository"
 	"github.com/bombnp/cloud-final-services/lib/influxdb"
 	"github.com/bombnp/cloud-final-services/lib/postgres"
+	"github.com/bombnp/cloud-final-services/lib/pubsub"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,14 +20,19 @@ func main() {
 
 	pg, err := postgres.New(&conf.Database.Postgres)
 	if err != nil {
-		log.Fatalln("Postgres are not connected")
+		log.Fatalln("Postgres are not connected", err)
 		return
 	}
 
 	influx, err := influxdb.NewService(&conf.Database.InfluxDB)
 	if err != nil {
-		log.Fatalln("Postgres are not connected")
+		log.Fatalln("Postgres are not connected", err)
 		return
+	}
+
+	pub, err := pubsub.NewPublisher(conf.Publisher)
+	if err != nil {
+		log.Fatalln("can't init google cloud publisher", err)
 	}
 
 	router := gin.Default()
@@ -38,17 +44,21 @@ func main() {
 
 	pairHandler := pair.NewHandler(pair.NewService(repo))
 	subscribeHandler := subscribe.NewHandler(subscribe.NewService(repo))
-	alertHandler := alert.NewHandler(alert.NewService(repo))
+	alertHandler := alert.NewHandler(alert.NewService(repo, pub))
 
 	apiGroup := router.Group("/api")
 	{
 		apiGroup.GET("/pair", pairHandler.GetPairs)
-		apiGroup.GET("/alert", alertHandler.GetTokenAlertSummaryHandler)
 
 		subscribeGroup := apiGroup.Group("/subscribe")
 		{
 			subscribeGroup.GET("/alert", subscribeHandler.GetAlertSubscribe)
 			subscribeGroup.POST("/alert", subscribeHandler.PostAlertSubscribe)
+		}
+
+		triggerGroup := apiGroup.Group("/trigger")
+		{
+			triggerGroup.POST("/alert", alertHandler.TriggerPriceAlert)
 		}
 	}
 

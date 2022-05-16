@@ -3,7 +3,10 @@ package repository
 import (
 	"github.com/bombnp/cloud-final-services/lib/influxdb"
 	"github.com/bombnp/cloud-final-services/lib/postgres/models"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Repository struct {
@@ -18,10 +21,18 @@ func New(pg *gorm.DB, influx *influxdb.Service) *Repository {
 	}
 }
 
-func (db *Repository) InsertNewSubscribe(id, pool, t, channel string) error {
-
-	query := `INSERT INTO pair_subscriptions (server_id,pool_address,type,channel_id) VALUE('?','?','?','?')`
-	return db.Postgres.Exec(query, id, pool, t, channel).Error
+func (db *Repository) InsertNewSubscribe(id string, pool string, t models.SubscriptionType, channel string) error {
+	pairSub := models.PairSubscription{
+		ServerId:    id,
+		PoolAddress: pool,
+		Type:        t,
+		ChannelId:   channel,
+	}
+	err := db.Postgres.Clauses(clause.OnConflict{UpdateAll: true}).Create(&pairSub).Error
+	if err != nil {
+		return errors.Wrap(err, "can't execute create query")
+	}
+	return nil
 
 }
 
@@ -57,4 +68,34 @@ func (db *Repository) QueryAllPairs() ([]models.Pair, error) {
 	} else {
 		return pairList, nil
 	}
+}
+
+func (db *Repository) QueryPairNames() (map[common.Address]string, error) {
+	pairList, err := db.QueryAllPairs()
+	if err != nil {
+		return nil, errors.Wrap(err, "can't get pairs from postgres")
+	}
+	pairNames := make(map[common.Address]string)
+	for _, pair := range pairList {
+		pairNames[common.HexToAddress(pair.PoolAddress)] = pair.Name
+	}
+	return pairNames, nil
+}
+
+func (db *Repository) QueryPairSubscriptionsMap() (map[common.Address][]models.PairSubscription, error) {
+	var pairSubs []models.PairSubscription
+	if err := db.Postgres.Find(&pairSubs).Error; err != nil {
+		return nil, errors.Wrap(err, "can't get pair subscriptions from postgres")
+	}
+
+	pairSubMap := make(map[common.Address][]models.PairSubscription)
+	for _, pairSub := range pairSubs {
+		pairSubList, ok := pairSubMap[common.HexToAddress(pairSub.PoolAddress)]
+		if !ok {
+			pairSubList = []models.PairSubscription{}
+		}
+		pairSubList = append(pairSubList, pairSub)
+		pairSubMap[common.HexToAddress(pairSub.PoolAddress)] = pairSubList
+	}
+	return pairSubMap, nil
 }

@@ -5,7 +5,11 @@ import {
 } from '@discordjs/builders'
 import axios from 'axios'
 import { ChannelType } from 'discord-api-types/v10'
-import { CommandInteraction, MessageEmbed } from 'discord.js'
+import {
+    CommandInteraction,
+    GuildTextBasedChannel,
+    MessageEmbed,
+} from 'discord.js'
 import dotenv from 'dotenv'
 
 dotenv.config()
@@ -26,6 +30,28 @@ async function getPairChoice(): Promise<Pair[]> {
     return pair_list
 }
 
+function SubscriptionEmbed(
+    address: string,
+    channel: GuildTextBasedChannel,
+    successful = true
+): MessageEmbed {
+    return new MessageEmbed()
+        .setColor(successful ? 'GREEN' : 'RED')
+        .setTitle(`Subscription ${successful ? 'complete' : 'failed'}`)
+        .setThumbnail(
+            'https://play-lh.googleusercontent.com/0bVs9-3xq573KI9u2hqZ86ARwltcoBv4RGOTI58Sw-xClAfl8dYdd9eYn2vf0D2HMA'
+        )
+        .addField('\u200B', '\u200B')
+        .addField('Pair', address, true)
+        .addField('\u200B', '\u200B', true)
+        .addField('Alert channel', channel.toString(), true)
+        .setAuthor({
+            iconURL:
+                'https://play-lh.googleusercontent.com/0bVs9-3xq573KI9u2hqZ86ARwltcoBv4RGOTI58Sw-xClAfl8dYdd9eYn2vf0D2HMA',
+            name: 'Alert bot',
+        })
+}
+
 module.exports = {
     async init() {
         let command
@@ -40,7 +66,7 @@ module.exports = {
                         .setDescription('Pair that you wanna subscribe')
                         .setRequired(true)
 
-                    pair_list.map((pair) => {
+                    pair_list.forEach((pair) => {
                         console.log(pair.pool_name + ': ' + pair.pool_address)
                         option = option.addChoices({
                             name: pair.pool_name,
@@ -69,42 +95,34 @@ module.exports = {
         const id = interaction.guildId
         const pair = interaction.options.getString('pair')
         const channel = interaction.options.getChannel('channel')
-        let channel_target
+        let channel_target: GuildTextBasedChannel
 
         if (!channel) channel_target = interaction.channel
         else {
-            channel_target = channel
+            channel_target = channel as GuildTextBasedChannel
         }
 
-        await axios
-            .post(process.env.API_URL + '/api/subscribe/alert', {
+        try {
+            await axios.post(process.env.API_URL + '/api/subscribe/alert', {
                 server_id: id,
                 pool: pair,
-                channel: channel_target.id,
+                channel_id: channel_target.id,
             })
-            .catch((err) => {
-                console.log(err.data)
-            })
+            console.log(`[subscribe] subscribed ${id} for pair ${pair}`)
 
-        const embed: MessageEmbed = new MessageEmbed()
-            .setColor('GREEN')
-            .setTitle('Subscribe complete')
-            .setThumbnail(
-                'https://play-lh.googleusercontent.com/0bVs9-3xq573KI9u2hqZ86ARwltcoBv4RGOTI58Sw-xClAfl8dYdd9eYn2vf0D2HMA'
-            )
-            .addField('\u200B', '\u200B')
-            .addField('Pair address', pair, true)
-            .addField('\u200B', '\u200B', true)
-            .addField('Alert Channel', channel_target.toString(), true)
-            .setAuthor({
-                iconURL:
-                    'https://play-lh.googleusercontent.com/0bVs9-3xq573KI9u2hqZ86ARwltcoBv4RGOTI58Sw-xClAfl8dYdd9eYn2vf0D2HMA',
-                name: 'Alert bot',
+            const embed = SubscriptionEmbed(pair, channel_target, true)
+            await interaction.reply({
+                ephemeral: true,
+                embeds: [embed],
             })
+        } catch (err) {
+            console.log(err.response.data)
 
-        await interaction.reply({
-            ephemeral: true,
-            embeds: [embed],
-        })
+            const embed = SubscriptionEmbed(pair, channel_target, false)
+            await interaction.reply({
+                ephemeral: true,
+                embeds: [embed],
+            })
+        }
     },
 }
