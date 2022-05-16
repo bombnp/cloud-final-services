@@ -21,13 +21,7 @@ func NewService(db *repository.Repository) *Service {
 	}
 }
 
-type alertSummary struct {
-	High   float64
-	Low    float64
-	Change float64
-}
-
-func (s *Service) GetTokenAlertSummary(ctx context.Context) (map[common.Address]alertSummary, error) {
+func (s *Service) GetTokenAlertSummary(ctx context.Context) (map[common.Address]AlertSummary, error) {
 	conf := config.InitConfig()
 	currentTime := time.Now()
 	args := &alertSummaryTemplateArgs{
@@ -40,7 +34,7 @@ func (s *Service) GetTokenAlertSummary(ctx context.Context) (map[common.Address]
 		return nil, errors.Wrap(err, "error during influx query")
 	}
 
-	summaryMap := make(map[common.Address]alertSummary)
+	summaryMap := make(map[common.Address]AlertSummary)
 	var currentTable string
 	for result.Next() {
 		if result.TableChanged() {
@@ -48,20 +42,28 @@ func (s *Service) GetTokenAlertSummary(ctx context.Context) (map[common.Address]
 			currentTable = columns[0].DefaultValue()
 		}
 		address := common.HexToAddress(result.Record().ValueByKey("address").(string))
+		tm := result.Record().Time()
 		summary, ok := summaryMap[address]
 		if !ok {
-			summary = alertSummary{}
+			summary = AlertSummary{}
 		}
 		switch currentTable {
 		case "high":
 			summary.High = result.Record().Value().(float64)
+			summary.HighTime = tm
 		case "low":
 			summary.Low = result.Record().Value().(float64)
+			summary.LowTime = tm
 		}
 		summaryMap[address] = summary
+
 	}
 	for address, summary := range summaryMap {
-		summary.Change = (summary.High - summary.Low) / summary.Low
+		if summary.HighTime.Before(summary.LowTime) {
+			summary.Change = (summary.High - summary.Low) / summary.High
+		} else {
+			summary.Change = (summary.High - summary.Low) / summary.Low
+		}
 		summaryMap[address] = summary
 	}
 	return summaryMap, nil
