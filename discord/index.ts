@@ -149,7 +149,7 @@ let temp = new Map<string, number>();
 // run alert check updated every 2 minute
 cron.schedule("*/2 * * * *", () => {
     const tm = Math.round(new Date().getTime() / 1000);
-    console.log("Now is " + tm.toString());
+    console.log("[Alert] Now is " + tm.toString());
 
     interface Alert {
         address: string;
