@@ -54,7 +54,7 @@ func main() {
 	pairHandler := pair.NewHandler(pair.NewService(repo))
 	subscribeHandler := subscribe.NewHandler(subscribe.NewService(repo))
 	alertHandler := alert.NewHandler(alert.NewService(repo, pub))
-	summaryHandler := summary.NewHandler(summary.NewService(repo))
+	summaryHandler := summary.NewHandler(summary.NewService(repo, pub))
 
 	apiGroup := router.Group("/api")
 	{
@@ -69,11 +69,7 @@ func main() {
 		triggerGroup := apiGroup.Group("/trigger")
 		{
 			triggerGroup.POST("/alert", alertHandler.TriggerPriceAlert)
-		}
-
-		summaryGroup := apiGroup.Group("/summary")
-		{
-			summaryGroup.POST("/daily", summaryHandler.TriggerDailySummaryReport)
+			triggerGroup.POST("/summary", summaryHandler.TriggerDailySummaryReport)
 		}
 	}
 

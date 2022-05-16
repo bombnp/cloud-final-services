@@ -22,3 +22,16 @@ type PriceAlertMsg struct {
 	Change      float64 `json:"change"`
 	Since       int64   `json:"since"`
 }
+
+type PriceSummaryMsg struct {
+	ServerId    string  `json:"serverId"`
+	PoolAddress string  `json:"poolAddress"`
+	ChannelId   string  `json:"channelId"`
+	PairName    string  `json:"pairName"`
+	Date        string  `json:"date"`
+	Open        float64 `json:"open"`
+	Close       float64 `json:"close"`
+	High        float64 `json:"high"`
+	Low         float64 `json:"low"`
+	Change      float64 `json:"change"`
+}

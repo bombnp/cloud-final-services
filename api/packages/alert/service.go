@@ -12,7 +12,6 @@ import (
 	"github.com/bombnp/cloud-final-services/api/config"
 	"github.com/bombnp/cloud-final-services/api/repository"
 	"github.com/bombnp/cloud-final-services/lib/influxdb"
-	"github.com/bombnp/cloud-final-services/lib/postgres/models"
 	"github.com/bombnp/cloud-final-services/lib/pubsub"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/go-redis/redis/v8"
@@ -40,6 +39,7 @@ func (s *Service) SendAlerts(ctx context.Context, alerts []PriceAlert) error {
 	if err != nil {
 		return errors.Wrap(err, "can't get pair subscriptions map")
 	}
+
 	var alertMessages []pubsub.PriceAlertMsg
 
 	tm := time.Now().Unix()
@@ -70,17 +70,15 @@ func (s *Service) SendAlerts(ctx context.Context, alerts []PriceAlert) error {
 			continue
 		}
 		for _, pairSub := range pairSubs {
-			if pairSub.Type == models.AlertSubscription {
-				alertMsg := pubsub.PriceAlertMsg{
-					ServerId:    pairSub.ServerId,
-					PoolAddress: pairSub.PoolAddress,
-					ChannelId:   pairSub.ChannelId,
-					PairName:    pairNames[alert.Address],
-					Change:      alert.Change,
-					Since:       alert.Since.Unix(),
-				}
-				alertMessages = append(alertMessages, alertMsg)
+			alertMsg := pubsub.PriceAlertMsg{
+				ServerId:    pairSub.ServerId,
+				PoolAddress: pairSub.PoolAddress,
+				ChannelId:   pairSub.ChannelId,
+				PairName:    pairNames[alert.Address],
+				Change:      alert.Change,
+				Since:       alert.Since.Unix(),
 			}
+			alertMessages = append(alertMessages, alertMsg)
 		}
 	}
 	err = s.publishAlertMessages(ctx, alertMessages)

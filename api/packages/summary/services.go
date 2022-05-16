@@ -2,22 +2,29 @@ package summary
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 	"time"
 
+	"github.com/ThreeDotsLabs/watermill"
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/bombnp/cloud-final-services/api/config"
 	"github.com/bombnp/cloud-final-services/api/repository"
 	"github.com/bombnp/cloud-final-services/lib/influxdb"
+	"github.com/bombnp/cloud-final-services/lib/pubsub"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 )
 
 type Service struct {
 	repository *repository.Repository
+	pub        *pubsub.Publisher
 }
 
-func NewService(db *repository.Repository) *Service {
+func NewService(repository *repository.Repository, pub *pubsub.Publisher) *Service {
 	return &Service{
-		repository: db,
+		repository: repository,
+		pub:        pub,
 	}
 }
 
@@ -27,6 +34,66 @@ type dailySummary struct {
 	High   float64
 	Low    float64
 	Change float64
+}
+
+func (s *Service) SendSummaryReports(ctx context.Context, summaryMap map[common.Address]dailySummary) error {
+	pairSubMap, err := s.repository.QueryPairSubscriptionsMap()
+	if err != nil {
+		return errors.Wrap(err, "can't get pair subscriptions map")
+	}
+	pairNames, err := s.repository.QueryPairNames()
+	if err != nil {
+		return errors.Wrap(err, "can't get pair subscriptions map")
+	}
+
+	var summaryMessages []pubsub.PriceSummaryMsg
+	for address, summary := range summaryMap {
+		pairSubs, ok := pairSubMap[address]
+		if !ok {
+			continue
+		}
+		for _, pairSub := range pairSubs {
+			summaryMsg := pubsub.PriceSummaryMsg{
+				ServerId:    pairSub.ServerId,
+				PoolAddress: pairSub.PoolAddress,
+				ChannelId:   pairSub.ChannelId,
+				PairName:    pairNames[address],
+				Date:        time.Now().Format("January 02, 2006"),
+				Open:        summary.Open,
+				Close:       summary.Close,
+				High:        summary.High,
+				Low:         summary.Low,
+				Change:      summary.Change,
+			}
+			summaryMessages = append(summaryMessages, summaryMsg)
+		}
+	}
+	err = s.publishSummaryMessages(ctx, summaryMessages)
+	if err != nil {
+		return errors.Wrap(err, "can't publish summary messages")
+	}
+	return nil
+
+}
+
+func (s *Service) publishSummaryMessages(ctx context.Context, summaryMessages []pubsub.PriceSummaryMsg) error {
+	conf := config.InitConfig()
+	pub := s.pub
+	out, err := json.Marshal(summaryMessages)
+	if err != nil {
+		return errors.Wrap(err, "can't marshal summary reports to json")
+	}
+
+	msg := message.NewMessage(watermill.NewUUID(), out)
+	var orderingKey string
+	if conf.Publisher.EnableMessageOrdering {
+		orderingKey = pubsub.PriceSummaryTopic
+	}
+	if err = pub.Publish(ctx, pubsub.PriceSummaryTopic, orderingKey, msg); err != nil {
+		return errors.Wrap(err, "can't publish message to pubsub")
+	}
+	log.Printf("published %d summary reports\n", len(summaryMessages))
+	return nil
 }
 
 func (s *Service) GetTokenDailySummary(ctx context.Context) (map[common.Address]dailySummary, error) {
