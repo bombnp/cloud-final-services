@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/bombnp/cloud-final-services/api/config"
+	"github.com/bombnp/cloud-final-services/api/packages/alert"
 	"github.com/bombnp/cloud-final-services/api/packages/pair"
 	"github.com/bombnp/cloud-final-services/api/packages/subscribe"
 	"github.com/bombnp/cloud-final-services/api/repository"
@@ -37,13 +38,16 @@ func main() {
 
 	pairHandler := pair.NewHandler(pair.NewService(repo))
 	subscribeHandler := subscribe.NewHandler(subscribe.NewService(repo))
+	alertHandler := alert.NewHandler(alert.NewService(repo))
 
 	apiGroup := router.Group("/api")
 	{
 		apiGroup.GET("/pair", pairHandler.GetPairs)
+		apiGroup.GET("/alert", alertHandler.GetTokenAlertSummaryHandler)
 
 		subscribeGroup := apiGroup.Group("/subscribe")
 		{
+			subscribeGroup.GET("/alert", subscribeHandler.GetAlertSubscribe)
 			subscribeGroup.POST("/alert", subscribeHandler.PostAlertSubscribe)
 		}
 	}

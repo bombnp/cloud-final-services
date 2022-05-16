@@ -12,6 +12,23 @@ func NewHandler(s *Service) *Handler {
 	}
 }
 
+func (h *Handler) GetAlertSubscribe(c *gin.Context) {
+
+	address := c.Param("address")
+
+	resp, err := h.s.GetAlert(address)
+
+	if err != nil {
+		c.JSON(400, &Logger{
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, resp)
+
+}
+
 func (h *Handler) PostAlertSubscribe(c *gin.Context) {
 
 	var req AlertSubscribeRequest
