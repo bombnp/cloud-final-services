@@ -34,9 +34,9 @@ const commandFiles = fs
 for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
     const command = require(filePath);
-    command.init().then(() => {
-        commands.set(command.data.name, command);
-        commandsData.push(command.data.toJSON());
+    command.init().then((cmd) => {
+        commands.set(cmd.name, command);
+        commandsData.push(cmd.toJSON());
     });
 }
 

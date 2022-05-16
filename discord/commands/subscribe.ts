@@ -26,12 +26,11 @@ async function getPairChoice(): Promise<Pair[]> {
     return pair_list;
 }
 
-let command;
-
 module.exports = {
-    data: command,
     async init() {
-        getPairChoice().then((pair_list) => {
+        let command;
+
+        await getPairChoice().then((pair_list) => {
             command = new SlashCommandBuilder()
                 .setName("subscribe")
                 .setDescription("Subscribe to alert bot")
@@ -63,6 +62,8 @@ module.exports = {
                         .addChannelTypes(ChannelType.GuildText);
                 });
         });
+
+        return command;
     },
     async execute(interaction: CommandInteraction) {
         const id = interaction.guildId;
