@@ -17,6 +17,19 @@ interface PriceAlertMsg {
     since: number
 }
 
+interface SummaryMsg {
+    serverId: string
+    poolAddress: string
+    channelId: string
+    pairName: string
+    date: string
+    open: number
+    close: number
+    high: number
+    low: number
+    change: number
+}
+
 function onReceiveAlert(message: Message) {
     const alerts: PriceAlertMsg[] = JSON.parse(message.data.toString())
     for (const alert of alerts) {
@@ -36,6 +49,32 @@ function onReceiveAlert(message: Message) {
                 name: 'Alert bot',
             })
         pushMessage(alert.serverId, alert.channelId, null, [embed])
+    }
+    message.ack()
+}
+
+function onReceiveSummary(message: Message) {
+    const summaries: SummaryMsg[] = JSON.parse(message.data.toString())
+    for (const summary of summaries) {
+        const embed = new MessageEmbed()
+            .setColor('YELLOW')
+            .setTitle(`Daily Summary for ${summary.pairName}`)
+            .addField('Pair', summary.pairName, true)
+            .addField('\u200B', '\u200B', true)
+            .addField('Date', summary.date, true)
+            .addField('Open', summary.open.toFixed(3), true)
+            .addField('\u200B', '\u200B', true)
+            .addField('Close', summary.close.toFixed(3), true)
+            .addField('High', summary.high.toFixed(3), true)
+            .addField('\u200B', '\u200B', true)
+            .addField('Low', summary.low.toFixed(3), true)
+            .addField('Change', `${(summary.change * 100).toFixed(2)}%`, true)
+            .setAuthor({
+                iconURL:
+                    'https://play-lh.googleusercontent.com/0bVs9-3xq573KI9u2hqZ86ARwltcoBv4RGOTI58Sw-xClAfl8dYdd9eYn2vf0D2HMA',
+                name: 'Alert bot',
+            })
+        pushMessage(summary.serverId, summary.channelId, null, [embed])
     }
     message.ack()
 }
@@ -68,6 +107,7 @@ export async function initPubSub() {
         .subscription(SUB_PRICE_SUMMARY)
 
     priceAlertSub.on('message', onReceiveAlert)
+    priceSummarySub.on('message', onReceiveSummary)
 
     console.log('subscribed to pubsub!')
 }
