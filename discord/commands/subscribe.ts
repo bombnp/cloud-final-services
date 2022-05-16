@@ -18,9 +18,11 @@ interface Pair {
 
 async function getPairChoice(): Promise<Pair[]> {
     let pair_list: Pair[];
-    axios.get<Pair[]>(process.env.API_URL + "/api/pair").then((response) => {
-        pair_list = response.data;
-    });
+    await axios
+        .get<Pair[]>(process.env.API_URL + "/api/pair")
+        .then((response) => {
+            pair_list = response.data;
+        });
     return pair_list;
 }
 
