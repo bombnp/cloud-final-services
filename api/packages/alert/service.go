@@ -47,7 +47,7 @@ func (s *Service) SendAlerts(ctx context.Context, alerts []PriceAlert) error {
 
 	for _, alert := range alerts {
 
-		str_last_time, err := s.repository.Redis.Get(ctx, alert.Address.String()).Result()
+		strLastTime, err := s.repository.Redis.Get(ctx, "Pair: "+alert.Address.String()).Result()
 
 		if err != nil {
 			if err != redis.Nil {
@@ -55,7 +55,7 @@ func (s *Service) SendAlerts(ctx context.Context, alerts []PriceAlert) error {
 			}
 		} else {
 
-			last_time, err := strconv.ParseInt(str_last_time, 10, 64)
+			last_time, err := strconv.ParseInt(strLastTime, 10, 64)
 
 			if err != nil {
 				errors.Wrap(err, "parse int error")
@@ -66,7 +66,7 @@ func (s *Service) SendAlerts(ctx context.Context, alerts []PriceAlert) error {
 			}
 		}
 
-		err = s.repository.Redis.Set(ctx, alert.Address.String(), strconv.FormatInt(tm, 10), 0).Err()
+		err = s.repository.Redis.Set(ctx, "Pair: "+alert.Address.String(), strconv.FormatInt(tm, 10), 0).Err()
 
 		if err != nil {
 			return errors.Wrap(err, "redis error")
