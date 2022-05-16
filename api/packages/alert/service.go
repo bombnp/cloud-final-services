@@ -46,21 +46,16 @@ func (s *Service) SendAlerts(ctx context.Context, alerts []PriceAlert) error {
 
 	for _, alert := range alerts {
 
-		lastTime, err := s.repository.Redis.Get(ctx, "Pair: "+alert.Address.String()).Int64()
+		lastTime, err := s.repository.Redis.Get(ctx, "pair:"+alert.Address.String()).Int64()
 
-		if err != nil {
-			if err != redis.Nil {
-				return errors.Wrap(err, "redis error")
-			}
-		} else {
-
-			if tm-lastTime < 3600 {
-				continue
-			}
+		if err != nil && err != redis.Nil {
+			return errors.Wrap(err, "redis error")
+		}
+		if tm-lastTime < 3600 {
+			continue
 		}
 
-		err = s.repository.Redis.Set(ctx, "Pair: "+alert.Address.String(), tm, 0).Err()
-
+		err = s.repository.Redis.Set(ctx, "pair:"+alert.Address.String(), tm, 0).Err()
 		if err != nil {
 			return errors.Wrap(err, "redis error")
 		}
