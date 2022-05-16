@@ -4,6 +4,7 @@ import (
 	"github.com/bombnp/cloud-final-services/lib/influxdb"
 	"github.com/bombnp/cloud-final-services/lib/postgres/models"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -12,12 +13,14 @@ import (
 type Repository struct {
 	Postgres *gorm.DB
 	InfluxDB *influxdb.Service
+	Redis    *redis.Client
 }
 
-func New(pg *gorm.DB, influx *influxdb.Service) *Repository {
+func New(pg *gorm.DB, influx *influxdb.Service, rd *redis.Client) *Repository {
 	return &Repository{
 		Postgres: pg,
 		InfluxDB: influx,
+		Redis:    rd,
 	}
 }
 

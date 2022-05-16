@@ -8,6 +8,7 @@ import (
 	"github.com/bombnp/cloud-final-services/lib/influxdb"
 	"github.com/bombnp/cloud-final-services/lib/postgres"
 	"github.com/bombnp/cloud-final-services/lib/pubsub"
+	"github.com/bombnp/cloud-final-services/lib/redis"
 	"github.com/spf13/viper"
 )
 
@@ -27,6 +28,7 @@ type ServerConfig struct {
 type DatabaseConfig struct {
 	Postgres postgres.Config `mapstructure:"postgres"`
 	InfluxDB influxdb.Config `mapstructure:"influxdb"`
+	Redis    redis.Config    `mapstructure:"redis"`
 }
 
 func InitConfig() *Config {

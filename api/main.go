@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/bombnp/cloud-final-services/lib/influxdb"
 	"github.com/bombnp/cloud-final-services/lib/postgres"
 	"github.com/bombnp/cloud-final-services/lib/pubsub"
+	"github.com/bombnp/cloud-final-services/lib/redis"
 	"github.com/gin-gonic/gin"
 )
 
@@ -30,6 +32,12 @@ func main() {
 		return
 	}
 
+	rd, err := redis.New(context.Background(), &conf.Database.Redis)
+	if err != nil {
+		log.Fatalln("Redis are not connected", err)
+		return
+	}
+
 	pub, err := pubsub.NewPublisher(conf.Publisher)
 	if err != nil {
 		log.Fatalln("can't init google cloud publisher", err)
@@ -40,7 +48,7 @@ func main() {
 		c.String(200, "Hello, World!")
 	})
 
-	repo := repository.New(pg, influx)
+	repo := repository.New(pg, influx, rd)
 
 	pairHandler := pair.NewHandler(pair.NewService(repo))
 	subscribeHandler := subscribe.NewHandler(subscribe.NewService(repo))
