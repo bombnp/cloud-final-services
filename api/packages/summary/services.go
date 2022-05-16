@@ -58,7 +58,7 @@ func (s *Service) SendSummaryReports(ctx context.Context, summaryMap map[common.
 				PoolAddress: pairSub.PoolAddress,
 				ChannelId:   pairSub.ChannelId,
 				PairName:    pairNames[address],
-				Date:        time.Now().Format("January 02, 2006"),
+				Date:        time.Now().Add(24 * time.Hour).Format("January 02, 2006"),
 				Open:        summary.Open,
 				Close:       summary.Close,
 				High:        summary.High,
