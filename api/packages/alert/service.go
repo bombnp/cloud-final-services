@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"log"
 	"math"
-	"strconv"
 	"time"
 
 	"github.com/ThreeDotsLabs/watermill"
@@ -47,7 +46,7 @@ func (s *Service) SendAlerts(ctx context.Context, alerts []PriceAlert) error {
 
 	for _, alert := range alerts {
 
-		strLastTime, err := s.repository.Redis.Get(ctx, "Pair: "+alert.Address.String()).Result()
+		lastTime, err := s.repository.Redis.Get(ctx, "Pair: "+alert.Address.String()).Int64()
 
 		if err != nil {
 			if err != redis.Nil {
@@ -55,18 +54,12 @@ func (s *Service) SendAlerts(ctx context.Context, alerts []PriceAlert) error {
 			}
 		} else {
 
-			last_time, err := strconv.ParseInt(strLastTime, 10, 64)
-
-			if err != nil {
-				errors.Wrap(err, "parse int error")
-			}
-
-			if tm-last_time < 3600 {
+			if tm-lastTime < 3600 {
 				continue
 			}
 		}
 
-		err = s.repository.Redis.Set(ctx, "Pair: "+alert.Address.String(), strconv.FormatInt(tm, 10), 0).Err()
+		err = s.repository.Redis.Set(ctx, "Pair: "+alert.Address.String(), tm, 0).Err()
 
 		if err != nil {
 			return errors.Wrap(err, "redis error")
