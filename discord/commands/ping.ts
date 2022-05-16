@@ -1,16 +1,16 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { SlashCommandBuilder } from '@discordjs/builders'
+import { CommandInteraction } from 'discord.js'
 
 module.exports = {
     async init() {
         return new SlashCommandBuilder()
-            .setName("ping")
-            .setDescription("Test that the bot is still alive!");
+            .setName('ping')
+            .setDescription('Test that the bot is still alive!')
     },
     async execute(interaction: CommandInteraction) {
         await interaction.reply({
-            content: "I am still alive!",
+            content: 'I am still alive!',
             ephemeral: true,
-        });
+        })
     },
-};
+}
