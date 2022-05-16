@@ -12,7 +12,6 @@ import (
 	"github.com/bombnp/cloud-final-services/api/config"
 	"github.com/bombnp/cloud-final-services/api/repository"
 	"github.com/bombnp/cloud-final-services/lib/influxdb"
-	"github.com/bombnp/cloud-final-services/lib/postgres/models"
 	"github.com/bombnp/cloud-final-services/lib/pubsub"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/go-redis/redis/v8"
@@ -40,27 +39,23 @@ func (s *Service) SendAlerts(ctx context.Context, alerts []PriceAlert) error {
 	if err != nil {
 		return errors.Wrap(err, "can't get pair subscriptions map")
 	}
+
 	var alertMessages []pubsub.PriceAlertMsg
 
 	tm := time.Now().Unix()
 
 	for _, alert := range alerts {
 
-		lastTime, err := s.repository.Redis.Get(ctx, "Pair: "+alert.Address.String()).Int64()
+		lastTime, err := s.repository.Redis.Get(ctx, "pair:"+alert.Address.String()).Int64()
 
-		if err != nil {
-			if err != redis.Nil {
-				return errors.Wrap(err, "redis error")
-			}
-		} else {
-
-			if tm-lastTime < 3600 {
-				continue
-			}
+		if err != nil && err != redis.Nil {
+			return errors.Wrap(err, "redis error")
+		}
+		if tm-lastTime < 3600 {
+			continue
 		}
 
-		err = s.repository.Redis.Set(ctx, "Pair: "+alert.Address.String(), tm, 0).Err()
-
+		err = s.repository.Redis.Set(ctx, "pair:"+alert.Address.String(), tm, 0).Err()
 		if err != nil {
 			return errors.Wrap(err, "redis error")
 		}
@@ -70,17 +65,15 @@ func (s *Service) SendAlerts(ctx context.Context, alerts []PriceAlert) error {
 			continue
 		}
 		for _, pairSub := range pairSubs {
-			if pairSub.Type == models.AlertSubscription {
-				alertMsg := pubsub.PriceAlertMsg{
-					ServerId:    pairSub.ServerId,
-					PoolAddress: pairSub.PoolAddress,
-					ChannelId:   pairSub.ChannelId,
-					PairName:    pairNames[alert.Address],
-					Change:      alert.Change,
-					Since:       alert.Since.Unix(),
-				}
-				alertMessages = append(alertMessages, alertMsg)
+			alertMsg := pubsub.PriceAlertMsg{
+				ServerId:    pairSub.ServerId,
+				PoolAddress: pairSub.PoolAddress,
+				ChannelId:   pairSub.ChannelId,
+				PairName:    pairNames[alert.Address],
+				Change:      alert.Change,
+				Since:       alert.Since.Unix(),
 			}
+			alertMessages = append(alertMessages, alertMsg)
 		}
 	}
 	err = s.publishAlertMessages(ctx, alertMessages)

@@ -9,6 +9,7 @@ import (
 	"github.com/bombnp/cloud-final-services/api/packages/alert"
 	"github.com/bombnp/cloud-final-services/api/packages/pair"
 	"github.com/bombnp/cloud-final-services/api/packages/subscribe"
+	"github.com/bombnp/cloud-final-services/api/packages/summary"
 	"github.com/bombnp/cloud-final-services/api/repository"
 	"github.com/bombnp/cloud-final-services/lib/influxdb"
 	"github.com/bombnp/cloud-final-services/lib/postgres"
@@ -53,6 +54,7 @@ func main() {
 	pairHandler := pair.NewHandler(pair.NewService(repo))
 	subscribeHandler := subscribe.NewHandler(subscribe.NewService(repo))
 	alertHandler := alert.NewHandler(alert.NewService(repo, pub))
+	summaryHandler := summary.NewHandler(summary.NewService(repo, pub))
 
 	apiGroup := router.Group("/api")
 	{
@@ -67,6 +69,7 @@ func main() {
 		triggerGroup := apiGroup.Group("/trigger")
 		{
 			triggerGroup.POST("/alert", alertHandler.TriggerPriceAlert)
+			triggerGroup.POST("/summary", summaryHandler.TriggerDailySummaryReport)
 		}
 	}
 
