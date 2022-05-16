@@ -1,8 +1,6 @@
 package summary
 
 import (
-	"log"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,14 +18,18 @@ func (h *Handler) TriggerDailySummaryReport(c *gin.Context) {
 
 	summaryMap, err := h.s.GetTokenDailySummary(c)
 	if err != nil {
-		c.JSON(400, &Logger{
+		c.JSON(500, &Logger{
 			Message: err.Error(),
 		})
 		return
 	}
 
-	for address, summary := range summaryMap {
-		log.Println(address, summary)
+	err = h.s.SendSummaryReports(c, summaryMap)
+	if err != nil {
+		c.JSON(500, &Logger{
+			Message: err.Error(),
+		})
+		return
 	}
 
 	c.JSON(200, &Logger{
