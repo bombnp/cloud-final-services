@@ -26,39 +26,44 @@ async function getPairChoice(): Promise<Pair[]> {
     return pair_list;
 }
 
-let command = new SlashCommandBuilder()
-    .setName("subscribe")
-    .setDescription("Subscribe to alert bot")
-    .addStringOption((option: SlashCommandStringOption) => {
-        option = option
-            .setName("pair")
-            .setDescription("Pair that you wanna subscribe")
-            .setRequired(true);
-
-        getPairChoice().then((pair_list) => {
-            pair_list.map((pair) => {
-                console.log(pair.pool_name + ": " + pair.pool_address);
-                option = option.addChoices({
-                    name: pair.pool_name,
-                    value: pair.pool_address,
-                });
-            });
-        });
-
-        console.log(option.toJSON());
-
-        return option;
-    })
-    .addChannelOption((option: SlashCommandChannelOption) => {
-        return option
-            .setName("channel")
-            .setDescription("Channel that you want for showing alert")
-            .setRequired(false)
-            .addChannelTypes(ChannelType.GuildText);
-    });
+let command;
 
 module.exports = {
     data: command,
+    async init() {
+        getPairChoice().then((pair_list) => {
+            command = new SlashCommandBuilder()
+                .setName("subscribe")
+                .setDescription("Subscribe to alert bot")
+                .addStringOption((option: SlashCommandStringOption) => {
+                    option = option
+                        .setName("pair")
+                        .setDescription("Pair that you wanna subscribe")
+                        .setRequired(true);
+
+                    pair_list.map((pair) => {
+                        console.log(pair.pool_name + ": " + pair.pool_address);
+                        option = option.addChoices({
+                            name: pair.pool_name,
+                            value: pair.pool_address,
+                        });
+                    });
+
+                    console.log(option.toJSON());
+
+                    return option;
+                })
+                .addChannelOption((option: SlashCommandChannelOption) => {
+                    return option
+                        .setName("channel")
+                        .setDescription(
+                            "Channel that you want for showing alert"
+                        )
+                        .setRequired(false)
+                        .addChannelTypes(ChannelType.GuildText);
+                });
+        });
+    },
     async execute(interaction: CommandInteraction) {
         const id = interaction.guildId;
         const pair = interaction.options.getString("pair");
@@ -70,7 +75,7 @@ module.exports = {
             channel_target = channel;
         }
 
-        axios
+        await axios
             .post(process.env.API_URL + "/api/subscribe/alert", {
                 server_id: id,
                 pool: pair,

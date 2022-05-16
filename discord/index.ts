@@ -34,8 +34,10 @@ const commandFiles = fs
 for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
     const command = require(filePath);
-    commands.set(command.data.name, command);
-    commandsData.push(command.data.toJSON());
+    command.init().then(() => {
+        commands.set(command.data.name, command);
+        commandsData.push(command.data.toJSON());
+    });
 }
 
 client.once("ready", () => {
@@ -174,6 +176,7 @@ cron.schedule("*/2 * * * *", () => {
             if (temp.has(alert.address)) {
                 if (tm - temp.get(alert.address) > 3600) {
                     if (alert.change > 5 || alert.change < -5) {
+                        temp.set(alert.address, tm);
                         axios
                             .get(process.env.API_URL + "/api/subscribe/alert", {
                                 params: {
