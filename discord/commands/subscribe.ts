@@ -18,11 +18,9 @@ interface Pair {
 
 async function getPairChoice(): Promise<Pair[]> {
     let pair_list: Pair[];
-    await axios
-        .get<Pair[]>(process.env.API_URL + "/api/pair")
-        .then((response) => {
-            pair_list = response.data;
-        });
+    axios.get<Pair[]>(process.env.API_URL + "/api/pair").then((response) => {
+        pair_list = response.data;
+    });
     return pair_list;
 }
 
@@ -37,6 +35,7 @@ let command = new SlashCommandBuilder()
 
         getPairChoice().then((pair_list) => {
             pair_list.map((pair) => {
+                console.log(pair.pool_name + ": " + pair.pool_address);
                 option.setChoices({
                     name: pair.pool_name,
                     value: pair.pool_address,
